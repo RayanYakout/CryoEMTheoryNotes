@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CryoEM Theory Notes</title>
+<style>
+  :root {
+    --ice: #dfeaf2;
+    --frost: #9fb8c9;
+    --slate: #0e161d;
+    --slate-2: #16222c;
+    --line: #243441;
+    --beam: #7fd3ff;
+  }
+  * { box-sizing: border-box; }
+  html { background: var(--slate); }
+  body {
+    margin: 0;
+    color: var(--ice);
+    font: 16px/1.55 ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    min-height: 100vh;
+    background:
+      radial-gradient(ellipse at 50% -20%, #1e3040 0%, transparent 60%),
+      var(--slate);
+  }
+  main { max-width: 640px; margin: 0 auto; padding: 48px 20px 80px; }
+
+  header { margin-bottom: 40px; }
+  h1 {
+    font: 600 34px/1.1 Georgia, "Times New Roman", serif;
+    letter-spacing: -0.01em;
+    margin: 0 0 8px;
+  }
+  .sub {
+    font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--frost);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .group { margin-bottom: 32px; }
+  .group h2 {
+    font: 12px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--frost);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 0 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--line);
+  }
+  ul { list-style: none; margin: 0; padding: 0; }
+  li a {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 14px 12px;
+    margin: 0 -12px;
+    border-radius: 8px;
+    color: var(--ice);
+    text-decoration: none;
+    font-size: 17px;
+  }
+  li a:hover, li a:focus-visible {
+    background: var(--slate-2);
+    outline: none;
+  }
+  li a:focus-visible { box-shadow: 0 0 0 2px var(--beam); }
+  li a .file {
+    font: 11px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--frost);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 45%;
+  }
+
+  .status {
+    font: 13px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--frost);
+    padding: 20px 0;
+  }
+  .status.err { color: #ffb4a8; }
+  .status code { color: var(--ice); }
+
+  footer {
+    margin-top: 56px;
+    font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+    color: var(--frost);
+  }
+  footer a { color: var(--beam); text-decoration: none; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div class="sub">Rayan · reading notes &amp; interactive explainers</div>
+    <h1>CryoEM Theory Notes</h1>
+  </header>
+
+  <div id="list" class="status">Loading file list…</div>
+
+  <footer>
+    This page lists every <code>.html</code> file in the repo automatically.
+    Upload a new one and it appears here after the site rebuilds (~1 min).
+    · <a id="repo-link" href="#">repo</a>
+  </footer>
+</main>
+
+<script>
+  // ---- config: change these two if you rename the repo or branch ----
+  const OWNER  = "RayanYakout";
+  const REPO   = "CryoEMTheoryNotes";
+  const BRANCH = "main";
+  // -------------------------------------------------------------------
+
+  document.getElementById("repo-link").href = `https://github.com/${OWNER}/${REPO}`;
+
+  function titleFrom(path) {
+    const base = path.split("/").pop().replace(/\.html?$/i, "");
+    return base
+      .replace(/[_\-]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  async function load() {
+    const el = document.getElementById("list");
+    try {
+      const url = `https://api.github.com/repos/${OWNER}/${REPO}/git/trees/${BRANCH}?recursive=1`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+      const data = await res.json();
+
+      const files = data.tree
+        .filter(n => n.type === "blob" && /\.html?$/i.test(n.path))
+        .filter(n => n.path.toLowerCase() !== "index.html")
+        .map(n => n.path)
+        .sort((a, b) => a.localeCompare(b));
+
+      if (files.length === 0) {
+        el.textContent = "No .html files yet. Upload one to the repo and it will show up here.";
+        return;
+      }
+
+      // group by top-level folder ("" = repo root)
+      const groups = {};
+      for (const p of files) {
+        const parts = p.split("/");
+        const folder = parts.length > 1 ? parts.slice(0, -1).join("/") : "";
+        (groups[folder] ||= []).push(p);
+      }
+
+      el.className = "";
+      el.innerHTML = "";
+      const folderNames = Object.keys(groups).sort((a, b) => (a === "" ? -1 : b === "" ? 1 : a.localeCompare(b)));
+      for (const folder of folderNames) {
+        const sec = document.createElement("section");
+        sec.className = "group";
+        if (folderNames.length > 1 || folder !== "") {
+          const h = document.createElement("h2");
+          h.textContent = folder === "" ? "Notes" : folder.replace(/[_\-]+/g, " ");
+          sec.appendChild(h);
+        }
+        const ul = document.createElement("ul");
+        for (const p of groups[folder]) {
+          const li = document.createElement("li");
+          const a = document.createElement("a");
+          a.href = p;
+          a.innerHTML = `<span>${titleFrom(p)}</span><span class="file">${p.split("/").pop()}</span>`;
+          li.appendChild(a);
+          ul.appendChild(li);
+        }
+        sec.appendChild(ul);
+        el.appendChild(sec);
+      }
+    } catch (e) {
+      el.className = "status err";
+      el.innerHTML = `Couldn't load the file list (${e.message}).<br>
+        Check that the repo is public and <code>OWNER / REPO / BRANCH</code> at the top of the script are correct.`;
+    }
+  }
+  load();
+</script>
+</body>
+</html>
