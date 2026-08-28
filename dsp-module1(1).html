@@ -1,0 +1,2510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Module 1 — Signals, Fourier and the CTF, for cryo-EM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ground:#0F1424; --ground-2:#171E36; --ground-3:#212A48;
+  --panel:#0B0F1C; --panel-2:#141B30;
+  --plate:#F4F6FB; --plate-ink:#161C33; --plate-dim:#586387;
+  --ink:#E8EBF7; --ink-dim:#9BA4C8; --ink-faint:#69739B;
+  --cyan:#3FD0DE; --violet:#A08CF5; --amber:#F5B342; --rose:#F2557E; --mint:#5FD6A4;
+  --rule:rgba(155,164,200,.20);
+  --display:"Bricolage Grotesque",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  --body:"Source Serif 4",Georgia,serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:17.5px;line-height:1.62;-webkit-font-smoothing:antialiased}
+
+.shell{display:grid;grid-template-columns:238px minmax(0,1fr);max-width:1340px;margin:0 auto}
+.rail{position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;padding:34px 16px 40px 24px;border-right:1px solid var(--rule)}
+.rail-brand{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--cyan);margin-bottom:20px;line-height:1.6}
+.rail a{display:flex;gap:9px;align-items:baseline;font-family:var(--mono);font-size:11.5px;line-height:1.35;color:var(--ink-faint);text-decoration:none;padding:5px 0}
+.rail a:hover,.rail a:focus-visible{color:var(--ink)}
+.rail a.on{color:var(--cyan)}
+.rail a span{opacity:.55;min-width:18px}
+.rail a.on span{opacity:1}
+.rail-part{font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--violet);margin:20px 0 6px;opacity:.8}
+.main{padding:0 clamp(20px,3.6vw,60px) 120px;min-width:0}
+
+.hero{padding:70px 0 34px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);margin:0 0 18px}
+h1{font-family:var(--display);font-weight:800;font-size:clamp(34px,5.4vw,62px);line-height:1.02;letter-spacing:-.035em;margin:0 0 20px}
+h1 em{font-style:normal;color:var(--cyan)}
+.dek{font-size:19.5px;color:var(--ink-dim);max-width:56ch;margin:0 0 18px}
+
+section{padding:54px 0 8px;scroll-margin-top:20px}
+section+section{border-top:1px solid var(--rule)}
+.snum{font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--cyan);display:block;margin-bottom:11px}
+h2{font-family:var(--display);font-weight:600;font-size:clamp(25px,3.2vw,34px);line-height:1.08;letter-spacing:-.022em;margin:0 0 18px;max-width:26ch}
+h3{font-family:var(--display);font-weight:600;font-size:18.5px;letter-spacing:-.01em;margin:34px 0 12px;color:var(--ink)}
+h4{font-family:var(--mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin:26px 0 10px;font-weight:500}
+p{max-width:68ch;margin:0 0 16px}
+ul,ol{max-width:66ch;padding-left:22px}
+li{margin-bottom:8px}
+a{color:var(--cyan)}
+strong{font-weight:600;color:#fff}
+em.term{font-style:normal;color:var(--violet);font-weight:600}
+code,.k{font-family:var(--mono);font-size:.87em;background:var(--ground-3);padding:1.5px 6px;border-radius:4px;color:var(--cyan);white-space:nowrap}
+
+/* ---------- callouts ---------- */
+.note{border-left:2px solid var(--ink-faint);padding:14px 18px;margin:22px 0;background:rgba(255,255,255,.022);max-width:70ch;font-size:16.5px}
+.note p{margin:0 0 10px}.note p:last-child{margin:0}
+.note-h{font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:8px;display:block}
+.note.payoff{border-color:var(--cyan);background:rgba(63,208,222,.055)}
+.note.payoff .note-h{color:var(--cyan)}
+.note.warn{border-color:var(--amber);background:rgba(245,179,66,.055)}
+.note.warn .note-h{color:var(--amber)}
+.note.aside{border-color:var(--violet);background:rgba(160,140,245,.05)}
+.note.aside .note-h{color:var(--violet)}
+
+/* ---------- formula ---------- */
+.eq{font-family:var(--mono);background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:18px 20px;margin:20px 0;max-width:70ch;overflow-x:auto;font-size:15px;line-height:1.9;color:var(--ink)}
+.eq .lbl{display:block;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:10px}
+.eq .where{display:block;margin-top:12px;font-size:12.5px;color:var(--ink-dim);line-height:1.7;white-space:normal}
+.eq b{color:var(--cyan);font-weight:600}
+
+/* ---------- interactive widget ---------- */
+.widget{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:20px;margin:26px 0;max-width:860px}
+.widget-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--violet);margin-bottom:4px}
+.widget-sub{font-size:14.5px;color:var(--ink-dim);margin:0 0 16px;max-width:70ch}
+.widget canvas{display:block;width:100%;border-radius:7px;background:var(--panel-2)}
+.ctrls{display:grid;gap:13px;margin-top:16px}
+.ctrl{display:grid;grid-template-columns:130px minmax(0,1fr) 78px;gap:12px;align-items:center}
+.ctrl label{font-family:var(--mono);font-size:11px;color:var(--ink-dim);letter-spacing:.04em}
+.ctrl output{font-family:var(--mono);font-size:11.5px;color:var(--cyan);text-align:right}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;background:var(--ground-3);border-radius:3px;outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--cyan);cursor:pointer;border:2px solid var(--panel)}
+input[type=range]::-moz-range-thumb{width:15px;height:15px;border-radius:50%;background:var(--cyan);cursor:pointer;border:2px solid var(--panel)}
+.readout{font-family:var(--mono);font-size:12.5px;color:var(--ink-dim);margin-top:14px;padding-top:13px;border-top:1px solid var(--rule);line-height:1.75}
+.readout b{color:var(--amber);font-weight:500}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+button.b{font-family:var(--mono);font-size:11px;letter-spacing:.05em;background:var(--ground-3);color:var(--ink);border:1px solid var(--rule);border-radius:6px;padding:7px 13px;cursor:pointer}
+button.b:hover{background:var(--ground-2);color:var(--cyan);border-color:var(--cyan)}
+button.b.on{background:var(--cyan);color:var(--panel);border-color:var(--cyan);font-weight:600}
+.canvrow{display:grid;gap:12px}
+@media(min-width:640px){.canvrow.two{grid-template-columns:1fr 1fr}.canvrow.three{grid-template-columns:1fr 1fr 1fr}}
+.canvlbl{font-family:var(--mono);font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:6px;text-align:center}
+
+/* ---------- schematic ---------- */
+.scheme{margin:26px 0;max-width:860px}
+.scheme svg{width:100%;height:auto;display:block;background:var(--panel);border:1px solid var(--rule);border-radius:12px}
+.scheme figcaption{font-size:14px;color:var(--ink-faint);margin-top:10px;font-family:var(--mono);line-height:1.6}
+.s-fill-a{fill:var(--ground-3)}.s-fill-b{fill:var(--panel-2)}
+.s-stroke{stroke:var(--rule);fill:none}
+text.s{font-family:var(--mono);font-size:12px;fill:var(--ink-dim)}
+text.s.hi{fill:var(--cyan)}
+text.s.am{fill:var(--amber)}
+text.s.vi{fill:var(--violet)}
+text.s.big{font-size:14px;fill:var(--ink)}
+text.s.sm{font-size:10.5px;fill:var(--ink-faint)}
+
+/* ---------- MCQ ---------- */
+.mcq{background:var(--panel);border:1px solid var(--rule);border-radius:12px;padding:20px;margin:24px 0;max-width:760px}
+.mcq-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--amber);margin-bottom:11px}
+.mcq-q{font-size:16.5px;margin:0 0 15px;max-width:none}
+.mcq-opt{display:block;width:100%;text-align:left;background:var(--panel-2);border:1px solid var(--rule);border-radius:7px;padding:11px 14px;margin-bottom:8px;color:var(--ink);font-family:var(--body);font-size:15.5px;cursor:pointer;line-height:1.5;transition:.13s}
+.mcq-opt:hover{border-color:var(--ink-faint)}
+.mcq-opt.right{border-color:var(--mint);background:rgba(95,214,164,.13)}
+.mcq-opt.wrong{border-color:var(--rose);background:rgba(242,85,126,.11);opacity:.75}
+.mcq-opt:disabled{cursor:default}
+.mcq-fb{display:none;margin-top:12px;padding:13px 15px;border-radius:7px;background:var(--ground-2);font-size:15px;line-height:1.6;border-left:2px solid var(--cyan)}
+.mcq-fb.show{display:block}
+
+/* ---------- numerical problem ---------- */
+.prob{background:var(--panel);border:1px solid var(--rule);border-left:2px solid var(--violet);border-radius:0 12px 12px 0;padding:19px 22px;margin:24px 0;max-width:760px}
+.prob-h{font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--violet);margin-bottom:10px}
+.prob-q{font-size:16.5px;margin:0 0 14px;max-width:none}
+.prob-in{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.prob-in input[type=text]{font-family:var(--mono);font-size:14px;background:var(--panel-2);border:1px solid var(--rule);border-radius:6px;padding:8px 11px;color:var(--ink);width:130px}
+.prob-in input[type=text]:focus{outline:none;border-color:var(--cyan)}
+.prob-unit{font-family:var(--mono);font-size:12px;color:var(--ink-faint)}
+.prob-verdict{font-family:var(--mono);font-size:12.5px;margin-left:4px}
+.prob-verdict.ok{color:var(--mint)}
+.prob-verdict.no{color:var(--rose)}
+.sol{margin-top:6px}
+.sol summary{font-family:var(--mono);font-size:11.5px;color:var(--cyan);cursor:pointer;letter-spacing:.05em;padding:6px 0;list-style:none}
+.sol summary::-webkit-details-marker{display:none}
+.sol summary:before{content:"▸ ";color:var(--ink-faint)}
+.sol[open] summary:before{content:"▾ "}
+.sol-body{padding:14px 16px;margin-top:8px;background:var(--ground-2);border-radius:8px;font-size:15.5px;line-height:1.72}
+.sol-body p{max-width:none}
+.sol-body .step{font-family:var(--mono);font-size:13.5px;color:var(--ink);background:var(--panel);padding:9px 13px;border-radius:6px;margin:9px 0;overflow-x:auto;white-space:nowrap}
+.sol-body .ans{font-family:var(--mono);font-size:14px;color:var(--mint);font-weight:600;margin-top:10px}
+
+/* ---------- reading map ---------- */
+table.map{width:100%;max-width:800px;border-collapse:collapse;margin:22px 0;font-size:14.5px}
+table.map th{font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint);text-align:left;padding:9px 12px;border-bottom:1px solid var(--rule);font-weight:500}
+table.map td{padding:10px 12px;border-bottom:1px solid rgba(155,164,200,.09);vertical-align:top;color:var(--ink-dim)}
+table.map td:first-child{font-family:var(--mono);font-size:12.5px;color:var(--cyan);white-space:nowrap}
+table.map td b{color:var(--ink);font-weight:600}
+
+.tag{display:inline-block;font-family:var(--mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;padding:3px 8px;border-radius:4px;background:var(--ground-3);color:var(--ink-dim);margin-right:6px;vertical-align:middle}
+.tag.cy{background:rgba(63,208,222,.16);color:var(--cyan)}
+.tag.vi{background:rgba(160,140,245,.16);color:var(--violet)}
+
+hr.soft{border:0;border-top:1px solid var(--rule);margin:34px 0;max-width:70ch}
+
+@media(max-width:860px){
+  .shell{grid-template-columns:1fr}
+  .rail{position:static;height:auto;border-right:0;border-bottom:1px solid var(--rule);padding:22px 20px;display:flex;flex-wrap:wrap;gap:4px 14px}
+  .rail-brand{width:100%}
+  .rail-part{width:100%;margin:8px 0 2px}
+  .ctrl{grid-template-columns:96px minmax(0,1fr) 66px;gap:9px}
+  body{font-size:17px}
+  .main{padding:0 20px 90px}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+<nav class="rail">
+  <div class="rail-brand">Module 1<br>DSP → cryo-EM</div>
+  <div class="rail-part">Part I · Sampling &amp; noise</div>
+  <a href="#s1"><span>1</span>Sampling &amp; Nyquist</a>
+  <a href="#s2"><span>2</span>Noise, SNR, √N</a>
+  <div class="rail-part">Part II · Linear systems</div>
+  <a href="#s3"><span>3</span>Linearity</a>
+  <a href="#s4"><span>4</span>Convolution &amp; the PSF</a>
+  <div class="rail-part">Part III · Fourier</div>
+  <a href="#s5"><span>5</span>The DFT</a>
+  <a href="#s6"><span>6</span>Amplitude vs phase</a>
+  <a href="#s7"><span>7</span>FT properties</a>
+  <a href="#s8"><span>8</span>The FFT</a>
+  <div class="rail-part">Part IV · The microscope</div>
+  <a href="#s9"><span>9</span>The CTF</a>
+  <a href="#s10"><span>10</span>Projection-slice</a>
+  <a href="#s11"><span>11</span>The missing wedge</a>
+  <div class="rail-part">Part V · What you do daily</div>
+  <a href="#s12"><span>12</span>Cross-correlation</a>
+  <a href="#s13"><span>13</span>FSC &amp; resolution</a>
+  <a href="#s14"><span>14</span>Filtering &amp; sharpening</a>
+  <div class="rail-part">Close</div>
+  <a href="#s15"><span>15</span>Problem set</a>
+  <a href="#s16"><span>16</span>Reading map</a>
+</nav>
+
+<main class="main">
+
+<header class="hero">
+  <p class="eyebrow">Self-study · Module 1 of 12</p>
+  <h1>Signals, Fourier,<br>and the <em>CTF</em></h1>
+  <p class="dek">The image-processing theory underneath cryo-EM, built from first principles — and connected, at every step, to the buttons you already press in RELION and cryoSPARC.</p>
+  <p class="dek" style="font-size:16.5px;color:var(--ink-faint)">Every section runs the same four beats: <strong style="color:var(--ink-dim)">the general principle</strong> → <strong style="color:var(--ink-dim)">something you can move</strong> → <strong style="color:var(--ink-dim)">the cryo-EM payoff</strong> → <strong style="color:var(--ink-dim)">a problem you work by hand</strong>. Nothing here needs maths beyond algebra and a willingness to push a slider until the picture clicks.</p>
+  <div class="note aside">
+    <span class="note-h">How to use this</span>
+    <p>Roughly one section per day at an hour a day gets you through in about three weeks. Do the interactives before you read the payoff box — the whole design assumes you've already seen the thing move. Work the numerical problems on paper before opening the solution; the arithmetic is the point, not the answer.</p>
+    <p style="color:var(--ink-faint);font-size:15px">Chapter numbers throughout refer to Steven W. Smith, <em>The Scientist and Engineer's Guide to Digital Signal Processing</em>, free at dspguide.com. This page is a companion, not a replacement — read the chapter, then come here for the cryo-EM translation.</p>
+  </div>
+</header>
+
+<section id="s1">
+  <span class="snum">§1 · Smith ch. 3 · Sampling</span>
+  <h2>Sampling, Nyquist, and why your pixel size is a hard ceiling</h2>
+
+  <p>A real signal — a sound wave, an electron wave, the projected potential of a protein — is continuous. It has a value at every point. A computer cannot store that, so we <em class="term">sample</em>: measure the value at regular intervals and throw everything in between away.</p>
+
+  <p>The obvious question is what gets lost. The answer is surprisingly sharp. If the signal contains no frequency higher than <span class="k">f</span>, and you sample at a rate greater than <span class="k">2f</span>, then <strong>nothing is lost at all</strong> — the continuous signal can be reconstructed exactly from the samples. This is the <em class="term">sampling theorem</em>, and the frequency <span class="k">f<sub>s</sub>/2</span> (half the sampling rate) is the <em class="term">Nyquist frequency</em>.</p>
+
+  <p>The flip side is brutal. Frequencies above Nyquist don't get attenuated or blurred. They get <em class="term">aliased</em> — they fold back into the sampled data disguised as some <em>lower</em> frequency, and once that happens there is no algorithm on earth that can undo it. The high-frequency information isn't degraded; it's actively lying to you.</p>
+
+  <div class="widget">
+    <div class="widget-h">Interactive 1.1 — watch a sine wave lie to you</div>
+    <p class="widget-sub">The grey curve is the true continuous signal. The dots are your samples. The coloured curve is what a reconstruction algorithm will honestly conclude you measured. Raise the signal frequency past half the sampling rate and watch the two curves part company.</p>
+    <canvas id="c-alias" height="300"></canvas>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="a-fsig">Signal freq</label>
+        <input type="range" id="a-fsig" min="0.5" max="19" step="0.1" value="3">
+        <output id="a-fsig-o">3.0 Hz</output>
+      </div>
+      <div class="ctrl">
+        <label for="a-fs">Sampling rate</label>
+        <input type="range" id="a-fs" min="4" max="40" step="1" value="20">
+        <output id="a-fs-o">20 Hz</output>
+      </div>
+    </div>
+    <div class="readout" id="a-out"></div>
+  </div>
+
+  <p>Notice what happens at exactly Nyquist and just past it. At <span class="k">f = f<sub>s</sub>/2</span> you're getting two samples per cycle, which is the bare minimum and already fragile. Above it, the apparent frequency starts running <em>backwards</em>: a 12 Hz signal sampled at 20 Hz is indistinguishable from an 8 Hz signal. This is the same effect that makes wagon wheels spin backwards in films.</p>
+
+  <div class="note payoff">
+    <span class="note-h">Cryo-EM payoff · pixel size is a sampling rate</span>
+    <p>Your detector samples the image plane in space rather than time. The sampling interval is the <strong>pixel size</strong>, in Å/pixel. Everything above transfers directly:</p>
+    <p><strong>Nyquist resolution = 2 × pixel size.</strong> At 1.06 Å/pixel your absolute hard ceiling is 2.12 Å, no matter how good your particle, how many images you collect, or how expensive the microscope is. At 1.5 Å/pixel it's 3.0 Å. This is why picking a pixel size at the microscope is a decision you cannot walk back later.</p>
+    <p>Three consequences you meet in practice:</p>
+    <ul>
+      <li><strong>Fourier cropping / binning.</strong> When cryoSPARC's Extract job offers "Fourier crop to box size", it is literally cropping the FFT — throwing away the outer, high-frequency part of the transform. That doubles or quadruples your pixel size, drops your Nyquist limit, and makes early 2D classification several times faster. Perfectly sane for classification; fatal if you forget to re-extract unbinned before final refinement.</li>
+      <li><strong>Super-resolution mode.</strong> K2/K3 detectors can localise electron hits more finely than the physical pixel, effectively halving the pixel size and doubling the Nyquist limit. Reconstructions beyond the physical Nyquist have been demonstrated — but it's demanding, not routine.</li>
+      <li><strong>Your binning error.</strong> The class of bug where a box size or pixel size gets applied at the wrong stage is precisely a sampling error: the data is fine, but the software's belief about the sampling interval no longer matches the data's actual sampling interval, so every downstream frequency is misinterpreted.</li>
+    </ul>
+  </div>
+
+  <div class="eq">
+    <span class="lbl">Sampling relations you should be able to write from memory</span>
+    Nyquist frequency  <b>k<sub>Nyq</sub></b> = 1 / (2 · p)<br>
+    Nyquist resolution <b>d<sub>Nyq</sub></b> = 2 · p<br>
+    Resolution ↔ spatial frequency: <b>d</b> = 1 / <b>k</b>
+    <span class="where">p = pixel size in Å/pixel · k = spatial frequency in Å⁻¹ · d = resolution in Å. Spatial frequency and resolution are reciprocals of each other, which is the single most common source of confusion when reading FSC curves and CTF plots. High frequency = small d = fine detail.</span>
+  </div>
+
+  <div class="prob">
+    <div class="prob-h">Problem 1.1 — Nyquist from pixel size</div>
+    <p class="prob-q">You collect on a Krios at a calibrated pixel size of <strong>0.8 Å/pixel</strong>. What is the highest resolution you could possibly reach, and what spatial frequency does that correspond to?</p>
+    <div class="prob-in">
+      <input type="text" id="p11" placeholder="d in Å" data-ans="1.6" data-tol="0.05">
+      <span class="prob-unit">Å</span>
+      <span class="prob-verdict" id="p11-v"></span>
+    </div>
+    <details class="sol"><summary>Worked solution</summary>
+      <div class="sol-body">
+        <p>Nyquist resolution is twice the sampling interval:</p>
+        <div class="step">d_Nyq = 2 × p = 2 × 0.8 Å = 1.6 Å</div>
+        <p>And the corresponding spatial frequency is the reciprocal:</p>
+        <div class="step">k_Nyq = 1 / 1.6 Å = 0.625 Å⁻¹</div>
+        <p class="ans">→ 1.6 Å, i.e. 0.625 Å⁻¹</p>
+        <p style="margin-top:12px;color:var(--ink-dim)">In practice you will never approach Nyquist — B-factor decay, beam-induced motion and conformational heterogeneity stop you long before. A common rule of thumb is that you should sample at roughly 1/3 of your target resolution rather than 1/2, giving yourself headroom. At 0.8 Å/pixel, targeting 2.4–3 Å is realistic.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="prob">
+    <div class="prob-h">Problem 1.2 — the consequence of binning</div>
+    <p class="prob-q">You extract particles at 1.06 Å/pixel in a 400-pixel box, then Fourier-crop to a 200-pixel box to speed up 2D classification. What is your new pixel size, and your new Nyquist resolution?</p>
+    <div class="prob-in">
+      <input type="text" id="p12" placeholder="d_Nyq in Å" data-ans="4.24" data-tol="0.1">
+      <span class="prob-unit">Å</span>
+      <span class="prob-verdict" id="p12-v"></span>
+    </div>
+    <details class="sol"><summary>Worked solution</summary>
+      <div class="sol-body">
+        <p>Fourier cropping by a factor of 2 in box size keeps the same physical field of view, so the same real-world distance is now covered by half as many pixels. The pixel size doubles:</p>
+        <div class="step">p_new = 1.06 × (400 / 200) = 2.12 Å/pixel</div>
+        <div class="step">d_Nyq = 2 × 2.12 = 4.24 Å</div>
+        <p class="ans">→ 2.12 Å/pixel, Nyquist 4.24 Å</p>
+        <p style="margin-top:12px;color:var(--ink-dim)">Which is completely fine for 2D classification, where you're sorting on overall shape and views at 10–20 Å. It would be catastrophic if you then ran a final refinement on those cropped particles and reported the resolution — the FSC would flatline at 4.24 Å and you'd have no idea why.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="mcq" data-correct="1">
+    <div class="mcq-h">Check yourself</div>
+    <p class="mcq-q">A colleague says: "Our particle only diffracts to 4 Å anyway, so we can afford to bin to 2.5 Å/pixel and save a lot of time." What's the problem with this reasoning?</p>
+    <button class="mcq-opt">Nothing — 2.5 Å/pixel gives 5 Å Nyquist, which is safely beyond 4 Å.</button>
+    <button class="mcq-opt">2.5 Å/pixel gives a 5 Å Nyquist ceiling, which is <em>below</em> the 4 Å target — you'd be throwing away exactly the information you want.</button>
+    <button class="mcq-opt">Binning doesn't change the Nyquist limit, only the file size.</button>
+    <button class="mcq-opt">You should never bin under any circumstances.</button>
+    <div class="mcq-fb">Nyquist resolution is 2 × 2.5 = 5 Å. Since 5 Å is a <em>coarser</em> resolution than 4 Å, the binned data physically cannot contain the 4 Å information — it's been aliased or discarded. The direction of the inequality catches people out constantly: bigger number in Å means worse resolution. A safe binning would keep Nyquist comfortably finer than the target, e.g. 1.3 Å/pixel giving 2.6 Å Nyquist.</div>
+  </div>
+</section>
+
+<section id="s2">
+  <span class="snum">§2 · Smith ch. 2 · Statistics &amp; noise</span>
+  <h2>Why averaging works, and why you need a million particles</h2>
+
+  <p>Take a measurement with random error. Take it again. The signal is the same both times; the noise is different, and — crucially — <em>uncorrelated</em>. When you add the two measurements, the signal adds coherently (it doubles) while the noise adds incoherently (it grows, but only by √2, because random errors partly cancel).</p>
+
+  <p>Run that argument for N measurements and you get the single most important result in all of experimental science:</p>
+
+  <div class="eq">
+    <span class="lbl">The √N law</span>
+    SNR<sub>average of N</sub> = <b>√N</b> × SNR<sub>single</sub>
+    <span class="where">Averaging N independent noisy observations of the same underlying signal improves the signal-to-noise ratio by a factor of √N. Note the ratio and the diminishing returns: to double your SNR you need 4× the data; to get 10× you need 100×.</span>
+  </div>
+
+  <p>A word on what SNR actually means, because the definition varies by field. In cryo-EM the convention is a <strong>variance ratio</strong>: SNR = σ²<sub>signal</sub> / σ²<sub>noise</sub>. This matters when you compare numbers across papers — some fields use amplitude ratios, which differ by a square.</p>
+
+  <div class="widget">
+    <div class="widget-h">Interactive 2.1 — averaging noise away</div>
+    <p class="widget-sub">Left: one simulated particle image at a cryo-EM-like SNR. Middle: the average of N such images. Right: the ground truth you're trying to recover. Push N up and watch the structure emerge from what looks like pure static.</p>
+    <div class="canvrow three">
+      <div><div class="canvlbl">Single image</div><canvas id="c-avg1" height="180"></canvas></div>
+      <div><div class="canvlbl" id="c-avglbl">Average of N</div><canvas id="c-avgN" height="180"></canvas></div>
+      <div><div class="canvlbl">Ground truth</div><canvas id="c-avgT" height="180"></canvas></div>
+    </div>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="v-n">N particles</label>
+        <input type="range" id="v-n" min="1" max="4000" step="1" value="1">
+        <output id="v-n-o">1</output>
+      </div>
+      <div class="ctrl">
+        <label for="v-snr">Single-image SNR</label>
+        <input type="range" id="v-snr" min="0.01" max="1" step="0.01" value="0.1">
+        <output id="v-snr-o">0.10</output>
+      </div>
+    </div>
+    <div class="readout" id="v-out"></div>
+  </div>
+
+  <div class="note payoff">
+    <span class="note-h">Cryo-EM payoff · this is the entire justification for single-particle analysis</span>
+    <p>A raw cryo-EM micrograph has an SNR of roughly <strong>0.1</strong> — estimates in the literature range from about 0.01 to 0.11 depending on definition and conditions. That is far below the threshold for a human to see anything at all. The <em class="term">Rose criterion</em> holds that a feature must sit about five standard deviations above background to be reliably detectable by eye, i.e. SNR ≈ 5.</p>
+    <p>So to go from SNR 0.1 to SNR 5 you need a factor of 50, and by the √N law that means N ≈ 2,500 particles. That's the number to make a class average <em>visible</em>. Getting an isotropic high-resolution 3D reconstruction needs far more — not only for SNR, but because every particle contributes only one orientation, and you need to fill three-dimensional Fourier space densely from every direction. Hence the 1.88 million particles from your 18,006 micrographs: that's not excess, it's the requirement.</p>
+    <p>The same principle operates one level down. Each micrograph is itself a dose-fractionated <strong>movie</strong>, and motion correction aligns and averages those frames. Same √N, applied to frames instead of particles.</p>
+  </div>
+
+  <div class="prob">
+    <div class="prob-h">Problem 2.1 — how many particles to see anything</div>
+    <p class="prob-q">Your single-particle images have SNR ≈ 0.08. How many particles must you average to reach the Rose criterion of SNR = 5?</p>
+    <div class="prob-in">
+      <input type="text" id="p21" placeholder="N" data-ans="3906" data-tol="120">
+      <span class="prob-unit">particles</span>
+      <span class="prob-verdict" id="p21-v"></span>
+    </div>
+    <details class="sol"><summary>Worked solution</summary>
+      <div class="sol-body">
+        <p>You need a gain factor G:</p>
+        <div class="step">G = 5 / 0.08 = 62.5</div>
+        <p>The gain is √N, so:</p>
+        <div class="step">√N = 62.5  →  N = 62.5² = 3906</div>
+        <p class="ans">→ about 3,900 particles</p>
+        <p style="margin-top:12px;color:var(--ink-dim)">Which is roughly the size of a decent 2D class — and that is not a coincidence. It's why 2D class averages look like recognisable projections while individual particle picks look like noise.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="prob">
+    <div class="prob-h">Problem 2.2 — the cost of the last increment</div>
+    <p class="prob-q">You have 400,000 particles. Your collaborator suggests collecting more to improve the reconstruction. Ignoring all other factors (heterogeneity, B-factor, orientation coverage), how many particles would you need in total to improve the SNR by a factor of 1.5?</p>
+    <div class="prob-in">
+      <input type="text" id="p22" placeholder="N" data-ans="900000" data-tol="20000">
+      <span class="prob-unit">particles</span>
+      <span class="prob-verdict" id="p22-v"></span>
+    </div>
+    <details class="sol"><summary>Worked solution</summary>
+      <div class="sol-body">
+        <p>SNR scales as √N, so to multiply SNR by 1.5 you multiply N by 1.5²:</p>
+        <div class="step">N_new = 400,000 × 1.5² = 400,000 × 2.25 = 900,000</div>
+        <p class="ans">→ 900,000 particles, i.e. another 500,000 on top of what you have</p>
+        <p style="margin-top:12px;color:var(--ink-dim)">This is the honest arithmetic behind "should we collect more data?" More than doubling the dataset buys you a 50% SNR improvement. That is often not the best use of microscope time compared with, say, fixing a preferred-orientation problem or improving sample quality — both of which can buy far more than 1.5×. The √N law is why data collection alone has such punishing diminishing returns.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="mcq" data-correct="2">
+    <div class="mcq-h">Check yourself</div>
+    <p class="mcq-q">Averaging improves SNR by √N only under one critical assumption. Which?</p>
+    <button class="mcq-opt">That the images are all the same size.</button>
+    <button class="mcq-opt">That the noise is Gaussian.</button>
+    <button class="mcq-opt">That the noise in each image is independent, while the signal is identical — i.e. the particles are correctly aligned and structurally identical.</button>
+    <button class="mcq-opt">That N is greater than 1000.</button>
+    <div class="mcq-fb">Independence of noise plus identity of signal. Gaussianity is not required (though it's usually a good approximation). This assumption is exactly what fails in the two hardest problems in SPA: <strong>misalignment</strong> (the signal isn't in the same place in each image, so it too adds incoherently and blurs) and <strong>heterogeneity</strong> (the signal genuinely isn't identical, because the particles are in different conformational states). Both cause averaging to destroy the very detail you're trying to recover — and both are why 3D classification exists.</div>
+  </div>
+</section>
+
+<section id="s3">
+  <span class="snum">§3 · Smith ch. 5 · Linear systems</span>
+  <h2>Linearity: the property that makes all of this legal</h2>
+
+  <p>A <em class="term">system</em> is anything that takes a signal in and gives a signal out. A microscope is a system. So is a filter, a detector, a reconstruction algorithm. A system is <em class="term">linear</em> if it satisfies two conditions:</p>
+
+  <ul>
+    <li><strong>Homogeneity</strong> — scale the input by k, and the output scales by k. Twice the specimen density gives twice the image contrast.</li>
+    <li><strong>Additivity (superposition)</strong> — feed in the sum of two inputs and you get the sum of the two outputs. Two molecules side by side produce the sum of what each would produce alone.</li>
+  </ul>
+
+  <p>A third property, <em class="term">shift invariance</em>, says that moving the input moves the output by the same amount without otherwise changing it. A system that is both linear and shift-invariant is called <strong>LSI</strong>, and LSI systems are the ones we know how to reason about completely.</p>
+
+  <p>Why do we care so much? Because linearity licenses <em class="term">decomposition</em>. If a system is linear, you can chop an impossibly complicated input into simple pieces, push each piece through separately, and add up the results. Two decompositions dominate everything that follows:</p>
+
+  <figure class="scheme">
+    <svg viewBox="0 0 800 300" role="img" aria-label="A complex signal decomposed either into impulses, leading to convolution, or into sinusoids, leading to the Fourier transform.">
+      <rect x="20" y="120" width="150" height="66" rx="8" class="s-fill-a"/>
+      <text class="s big" x="95" y="148" text-anchor="middle">Complex</text>
+      <text class="s big" x="95" y="168" text-anchor="middle">input signal</text>
+
+      <path d="M175 140 L 245 62" class="s-stroke" stroke-width="1.5"/>
+      <path d="M175 166 L 245 244" class="s-stroke" stroke-width="1.5"/>
+
+      <rect x="250" y="30" width="190" height="66" rx="8" class="s-fill-b" stroke="var(--cyan)" stroke-width="1" fill-opacity=".6"/>
+      <text class="s hi" x="345" y="56" text-anchor="middle">Impulse decomposition</text>
+      <text class="s sm" x="345" y="76" text-anchor="middle">signal = sum of shifted spikes</text>
+
+      <rect x="250" y="212" width="190" height="66" rx="8" class="s-fill-b" stroke="var(--violet)" stroke-width="1" fill-opacity=".6"/>
+      <text class="s vi" x="345" y="238" text-anchor="middle">Fourier decomposition</text>
+      <text class="s sm" x="345" y="258" text-anchor="middle">signal = sum of sines &amp; cosines</text>
+
+      <path d="M445 63 L 505 63" class="s-stroke" stroke="var(--cyan)" stroke-width="1.5" marker-end="url(#ar1)"/>
+      <path d="M445 245 L 505 245" class="s-stroke" stroke="var(--violet)" stroke-width="1.5" marker-end="url(#ar2)"/>
+      <defs>
+        <marker id="ar1" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="var(--cyan)"/></marker>
+        <marker id="ar2" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 z" fill="var(--violet)"/></marker>
+      </defs>
+
+      <rect x="510" y="30" width="270" height="66" rx="8" class="s-fill-a"/>
+      <text class="s big hi" x="645" y="56" text-anchor="middle">CONVOLUTION</text>
+      <text class="s sm" x="645" y="76" text-anchor="middle">→ impulse response, PSF, blurring</text>
+
+      <rect x="510" y="212" width="270" height="66" rx="8" class="s-fill-a"/>
+      <text class="s big vi" x="645" y="238" text-anchor="middle">FOURIER TRANSFORM</text>
+      <text class="s sm" x="645" y="258" text-anchor="middle">→ frequency space, the CTF, FSC</text>
+
+      <text class="s sm" x="400" y="160" text-anchor="middle">both routes describe the same system</text>
+      <text class="s sm am" x="400" y="180" text-anchor="middle">— they are two views of one truth</text>
+    </svg>
+    <figcaption>The two decomposition strategies. Everything in cryo-EM image processing is one of these two routes, or a translation between them.</figcaption>
+  </figure>
+
+  <div class="note payoff">
+    <span class="note-h">Cryo-EM payoff · the microscope is an LSI system</span>
+    <p>The whole edifice of cryo-EM image processing rests on modelling the transmission electron microscope as approximately linear and shift-invariant. That approximation is what allows us to write image formation as a single convolution, to correct the CTF by a per-pixel operation in Fourier space, and to combine thousands of independently-recorded images into one reconstruction.</p>
+    <p>It's worth knowing where the approximation strains. Shift invariance fails across a large field of view when the defocus varies with position — which is exactly why cryoSPARC has <strong>patch CTF estimation</strong> and <strong>local motion correction</strong> rather than one global value. The fix is to carve the micrograph into patches small enough that shift invariance holds within each one.</p>
+  </div>
+</section>
+
+<section id="s4">
+  <span class="snum">§4 · Smith ch. 6–7 · Convolution</span>
+  <h2>Convolution, the impulse response, and the point spread function</h2>
+
+  <p>Start with the simplest possible input: a single spike of unit height at one position, zero everywhere else. This is the <em class="term">delta function</em>, δ. Whatever an LSI system does to a delta function is called its <em class="term">impulse response</em>, written h. Because of linearity plus shift invariance, the impulse response tells you <strong>everything</strong> about the system — if you know how it smears one point, you know how it treats any input at all.</p>
+
+  <p>The reason is the input-side view of convolution. Any signal is just a row of scaled, shifted deltas. Push each one through: each becomes a scaled, shifted copy of h. Add them all up. That summation is <em class="term">convolution</em>, written with an asterisk:</p>
+
+  <div class="eq">
+    <span class="lbl">Convolution</span>
+    y[n] = x[n] <b>∗</b> h[n] = Σ<sub>k</sub> x[k] · h[n − k]
+    <span class="where">x = input · h = impulse response · y = output. The formula says: for each output point n, slide the impulse response so its origin sits at n, multiply it against the input point by point, and sum. The two ways of reading it — "scatter each input" (input-side) and "gather for each output" (output-side) — give identical results and are worth being able to switch between.</span>
+  </div>
+
+  <div class="widget">
+    <div class="widget-h">Interactive 4.1 — build a convolution by hand</div>
+    <p class="widget-sub">Top: the input signal (three sharp features). Middle: the impulse response — change its width and shape. Bottom: the convolution. Drag the width slider and watch the features smear into each other; that's exactly what an imaging system does to your specimen.</p>
+    <canvas id="c-conv" height="330"></canvas>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="cv-w">Kernel width</label>
+        <input type="range" id="cv-w" min="1" max="40" step="1" value="8">
+        <output id="cv-w-o">8</output>
+      </div>
+      <div class="ctrl">
+        <label for="cv-pos">Show step at</label>
+        <input type="range" id="cv-pos" min="0" max="255" step="1" value="50">
+        <output id="cv-pos-o">50</output>
+      </div>
+    </div>
+    <div class="btnrow">
+      <button class="b on" data-kern="gauss">Gaussian</button>
+      <button class="b" data-kern="box">Box</button>
+      <button class="b" data-kern="ring">Oscillating</button>
+    </div>
+    <div class="readout" id="cv-out"></div>
+  </div>
+
+  <p>Try the <strong>oscillating</strong> kernel. Notice that convolution with something that rings doesn't just blur — it produces dark fringes beside bright features, and features can even <em>invert</em>. Hold on to that observation; it's the entire behaviour of the CTF, and it's why raw cryo-EM micrographs have those distinctive white halos around particles.</p>
+
+  <p>In two dimensions the same operation applies with a 2D kernel. The 2D impulse response of an imaging system has its own name: the <em class="term">point spread function</em> (PSF). It's the image you'd get from an infinitely small point of specimen — the system's signature blur.</p>
+
+  <div class="note payoff">
+    <span class="note-h">Cryo-EM payoff · the image formation model</span>
+    <p>The core equation of cryo-EM image formation is a convolution:</p>
+    <p style="font-family:var(--mono);font-size:15px;color:var(--cyan);margin:14px 0">image = (projected potential) ∗ PSF + noise</p>
+    <p>Your micrograph is not a picture of the protein. It is the protein's projected Coulomb potential, convolved with the microscope's point spread function, buried in noise at SNR 0.1. Every step of processing after that is an attempt to undo one of those three operations: CTF correction undoes the convolution, averaging beats the noise, and 3D reconstruction undoes the projection.</p>
+    <p>The Fourier transform of the PSF is the <strong>contrast transfer function</strong>. That's §9 — but the reason the CTF is such a central object is exactly this: it is the frequency-domain face of the convolution that defines your data.</p>
+  </div>
+
+  <div class="mcq" data-correct="0">
+    <div class="mcq-h">Check yourself</div>
+    <p class="mcq-q">Why does knowing a system's impulse response tell you its response to <em>any</em> input?</p>
+    <button class="mcq-opt">Because any input can be written as a sum of scaled, shifted impulses, and linearity guarantees the output is the corresponding sum of scaled, shifted impulse responses.</button>
+    <button class="mcq-opt">Because the impulse response contains all the frequencies.</button>
+    <button class="mcq-opt">Because the impulse is the strongest possible input.</button>
+    <button class="mcq-opt">It doesn't — you also need the system's frequency response, which is independent information.</button>
+    <div class="mcq-fb">Exactly this. Decomposition into impulses, plus linearity and shift invariance, is the entire argument. And the last option is a trap worth noticing: the frequency response isn't independent information at all — it is the Fourier transform of the impulse response. Same object, different coordinates. PSF and CTF are a Fourier pair.</div>
+  </div>
+</section>
+
+<section id="s5">
+  <span class="snum">§5 · Smith ch. 8–9 · The DFT</span>
+  <h2>The Discrete Fourier Transform: any signal is a pile of sine waves</h2>
+
+  <p>The second decomposition strategy. Instead of breaking a signal into impulses, break it into <strong>sinusoids</strong> — sines and cosines of increasing frequency. The claim, which feels implausible the first time you meet it, is that <em>any</em> signal can be written as a weighted sum of sinusoids, including signals with sharp corners and flat regions that look nothing like waves.</p>
+
+  <p>The <em class="term">Discrete Fourier Transform</em> is the version of this a computer can compute: it takes N samples in and produces N/2+1 amplitude values and N/2+1 phase values, describing how much of each frequency the signal contains and where each of those waves sits.</p>
+
+  <div class="widget">
+    <div class="widget-h">Interactive 5.1 — Fourier synthesis sandbox</div>
+    <p class="widget-sub">Set the amplitude of each harmonic and watch the sum. The presets build recognisable waveforms — note how many harmonics a square wave needs, and what happens when you truncate the series.</p>
+    <div class="canvrow two">
+      <div><div class="canvlbl">Real space — the sum</div><canvas id="c-syn" height="200"></canvas></div>
+      <div><div class="canvlbl">Frequency space — the spectrum</div><canvas id="c-spec" height="200"></canvas></div>
+    </div>
+    <div class="ctrls" id="syn-ctrls"></div>
+    <div class="btnrow">
+      <button class="b" data-syn="square">Square wave</button>
+      <button class="b" data-syn="saw">Sawtooth</button>
+      <button class="b" data-syn="spike">Single spike</button>
+      <button class="b" data-syn="clear">Clear</button>
+    </div>
+    <div class="readout" id="syn-out"></div>
+  </div>
+
+  <p>The spike preset is worth dwelling on. To build a single narrow spike you need <em>every</em> frequency, all at equal amplitude. That is the reciprocal relationship in its purest form: <strong>narrow in real space means broad in Fourier space, and vice versa</strong>. A delta function transforms to a flat spectrum. A flat constant transforms to a delta. This is a rule you will use constantly.</p>
+
+  <h3>The four Fourier transforms, and which one you actually use</h3>
+
+  <p>Smith makes a point that saves a lot of confusion later. There are four Fourier transforms, not one, depending on whether your signal is continuous or discrete and whether it's periodic or aperiodic:</p>
+
+  <table class="map">
+    <tr><th>Signal type</th><th>Transform</th><th>Where you meet it</th></tr>
+    <tr><td>Continuous, aperiodic</td><td><b>Fourier Transform</b></td><td>Theory and derivations — the CTF equation is written this way</td></tr>
+    <tr><td>Continuous, periodic</td><td><b>Fourier Series</b></td><td>Crystallography, helical symmetry, layer lines</td></tr>
+    <tr><td>Discrete, aperiodic</td><td><b>DTFT</b></td><td>Filter design theory; rarely computed directly</td></tr>
+    <tr><td>Discrete, periodic</td><td><b>DFT</b></td><td><b>Everything you actually run.</b> Every FFT of a micrograph</td></tr>
+  </table>
+
+  <p>The DFT is the only one a computer can evaluate, and it assumes your data is <strong>periodic</strong> — that the signal wraps around and repeats forever. Your 400×400 particle box is treated as one tile of an infinite wallpaper. That assumption is invisible most of the time and occasionally bites hard.</p>
+
+  <div class="note warn">
+    <span class="note-h">Where the periodicity assumption bites · spectral leakage</span>
+    <p>If your signal doesn't fit a whole number of cycles into the window, the DFT sees a discontinuity where the end wraps around to the beginning. A sharp edge, as we just established, contains every frequency — so energy smears across the whole spectrum. This is <em class="term">spectral leakage</em>.</p>
+    <p>The fix in DSP is <em class="term">windowing</em>: taper the signal smoothly to zero at the edges before transforming. In cryo-EM the same fix has different names — the <strong>soft circular mask</strong> applied to particle boxes, and the <strong>apodisation</strong> of micrographs before computing power spectra. A hard-edged square box produces a cross-shaped artefact through the origin of the power spectrum, which is pure leakage from the box edges. It's why every extraction job applies a soft-edged mask by default, and why sharpening a mask edge too aggressively creates spurious high-resolution correlation.</p>
+  </div>
+
+  <div class="note payoff">
+    <span class="note-h">Cryo-EM payoff · you already look at DFTs every day</span>
+    <p>Every power spectrum you inspect during a data collection is a DFT — specifically the squared amplitude of the 2D DFT of a micrograph. The <strong>Thon rings</strong> you judge quality by are the visible oscillations of the CTF, read directly off that spectrum.</p>
+    <p>When you assess a micrograph by eye, you are reading a frequency-domain plot: ring spacing tells you defocus, ring ellipticity tells you astigmatism, how far out the rings extend tells you the effective resolution of that image, and a smeared or asymmetric pattern tells you about drift or ice thickness. Learning to read power spectra fluently is learning to read a DFT.</p>
+  </div>
+
+  <div class="prob">
+    <div class="prob-h">Problem 5.1 — Fourier pixel spacing</div>
+    <p class="prob-q">You extract particles into a <strong>256-pixel box</strong> at <strong>1.06 Å/pixel</strong>. What is the spacing between adjacent pixels in the Fourier transform, in Å⁻¹?</p>
+    <div class="prob-in">
+      <input type="text" id="p51" placeholder="Δk" data-ans="0.003684" data-tol="0.0002">
+      <span class="prob-unit">Å⁻¹</span>
+      <span class="prob-verdict" id="p51-v"></span>
+    </div>
+    <details class="sol"><summary>Worked solution</summary>
+      <div class="sol-body">
+        <p>The Fourier transform of an N-pixel box samples frequency space at intervals of 1 divided by the total physical extent of the box:</p>
+        <div class="step">box extent = N × p = 256 × 1.06 Å = 271.4 Å</div>
+        <div class="step">Δk = 1 / (N · p) = 1 / 271.4 Å = 0.003684 Å⁻¹</div>
+        <p class="ans">→ 0.00368 Å⁻¹ per Fourier pixel</p>
+        <p style="margin-top:12px;color:var(--ink-dim)">This is why box size matters beyond just "fitting the particle in". A <em>larger</em> box gives <em>finer</em> sampling of Fourier space — reciprocal again. That finer sampling is what allows accurate CTF fitting near the origin and clean separation of delocalised signal at high defocus. It's also why the standard advice is to make the box roughly 1.5–2× the particle diameter rather than snugly fitting it: the extra empty space buys you Fourier resolution.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="prob">
+    <div class="prob-h">Problem 5.2 — choosing a box size</div>
+    <p class="prob-q">Your particle is about <strong>140 Å</strong> across and your pixel size is <strong>0.8 Å/pixel</strong>. Using the 1.5–2× rule and rounding to a good FFT size, what box size (in pixels) would you extract at?</p>
+    <div class="prob-in">
+      <input type="text" id="p52" placeholder="pixels" data-ans="320" data-tol="60">
+      <span class="prob-unit">px</span>
+      <span class="prob-verdict" id="p52-v"></span>
+    </div>
+    <details class="sol"><summary>Worked solution</summary>
+      <div class="sol-body">
+        <p>Take about 1.8× the particle diameter for the physical box:</p>
+        <div class="step">box extent ≈ 1.8 × 140 Å = 252 Å</div>
+        <div class="step">box in pixels = 252 / 0.8 = 315 px</div>
+        <p>Now round to a size that FFTs efficiently — an even number whose prime factors are all small (2, 3, 5, 7). 315 is odd; 320 = 2⁶ × 5 is an excellent choice, and 336 = 2⁴ × 3 × 7 also works.</p>
+        <p class="ans">→ 320 px (256 would be too tight at 205 Å; 384 is safe but slower)</p>
+        <p style="margin-top:12px;color:var(--ink-dim)">Anything within roughly 260–400 px is defensible here — this is a judgement call, not a formula. At high defocus you want the larger end, because CTF delocalisation spreads signal further from the particle centre than you'd expect. Avoid prime or near-prime box sizes: an FFT of size 317 is dramatically slower than one of size 320, for reasons that become clear in §8.</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<section id="s6">
+  <span class="snum">§6 · Amplitude and phase</span>
+  <h2>Phases carry the picture</h2>
+
+  <p>A DFT gives you two numbers per frequency. You can store them as <strong>real and imaginary</strong> parts, or — usually more intuitive — as <strong>amplitude and phase</strong>. Amplitude says how much of that frequency is present. Phase says where the wave sits: whether its peak lands here or a quarter-wavelength over there.</p>
+
+  <p>People's instinct is that amplitude is the important half. It isn't. There's a classic demonstration, due to Kevin Cowtan, that settles the question immediately: take two images, Fourier transform both, then <strong>swap</strong> their amplitudes while keeping each one's phases, and transform back.</p>
+
+  <div class="widget">
+    <div class="widget-h">Interactive 6.1 — the amplitude/phase swap</div>
+    <p class="widget-sub">Two synthetic images, real 2D FFTs computed in your browser. The bottom row shows hybrids: each keeps the phases of one image and borrows the amplitudes of the other. Look at which parent each hybrid resembles.</p>
+    <div class="canvrow two">
+      <div><div class="canvlbl">Image A — three discs</div><canvas id="c-fa" height="150"></canvas></div>
+      <div><div class="canvlbl">Image B — stripes</div><canvas id="c-fb" height="150"></canvas></div>
+    </div>
+    <div class="canvrow two" style="margin-top:14px">
+      <div><div class="canvlbl" style="color:var(--cyan)">Phases of A + amplitudes of B</div><canvas id="c-fab" height="150"></canvas></div>
+      <div><div class="canvlbl" style="color:var(--violet)">Phases of B + amplitudes of A</div><canvas id="c-fba" height="150"></canvas></div>
+    </div>
+    <div class="readout" id="f-out">Computing 2D FFTs…</div>
+  </div>
+
+  <p>The hybrids follow their <strong>phases</strong>, not their amplitudes. Amplitude contributes texture and contrast; phase contributes structure, position, and identity. If you had to throw one away, you would keep the phases without hesitating.</p>
+
+  <div class="note payoff">
+    <span class="note-h">Cryo-EM payoff · why phase errors are the enemy</span>
+    <p>Several things follow directly:</p>
+    <ul>
+      <li><strong>Phase flipping is a legitimate CTF correction.</strong> The simplest CTF correction just fixes the <em>sign</em> of the transform where the CTF went negative, leaving amplitudes untouched. That sounds crude — it fixes only half the problem — but since phases carry the structure, it recovers most of what matters. It's still used when you want to preserve noise statistics.</li>
+      <li><strong>Misalignment is a phase error.</strong> By the shift theorem (§7), a translational error in a particle's assigned position is exactly a phase ramp applied to its transform. Averaging misaligned particles means averaging inconsistent phases, which cancels signal. This is the mathematical statement of why alignment accuracy sets your resolution limit.</li>
+      <li><strong>The FSC is a phase-sensitive measurement.</strong> It compares complex Fourier coefficients between half-maps, so two maps with matching power spectra but random relative phases score zero. FSC measures whether your two halves agree about <em>structure</em>, not just about how much power sits at each frequency.</li>
+      <li><strong>Sharpening cannot invent structure.</strong> B-factor sharpening rescales amplitudes only. It never touches phases. Which is precisely why it can make an existing map look crisper but can never add information that isn't there — a point worth being able to make confidently when someone over-sharpens.</li>
+    </ul>
+  </div>
+
+  <div class="mcq" data-correct="3">
+    <div class="mcq-h">Check yourself</div>
+    <p class="mcq-q">A map is sharpened with a B-factor of −100 Å². Which statement is correct?</p>
+    <button class="mcq-opt">High-resolution information has been recovered from the noise.</button>
+    <button class="mcq-opt">The phases have been corrected using the sharpening model.</button>
+    <button class="mcq-opt">The resolution of the map has improved.</button>
+    <button class="mcq-opt">The amplitudes at high spatial frequency have been boosted; phases and therefore information content are unchanged.</button>
+    <div class="mcq-fb">Sharpening is a pure amplitude-scaling operation in Fourier space, designed to counteract the envelope decay of the microscope and the specimen. It restores the <em>relative weighting</em> of frequencies so that features you already resolved become visible. It adds nothing. Over-sharpening amplifies high-frequency noise along with signal — which is why maps can look simultaneously crisper and less interpretable, and why local sharpening approaches (LocScale, LocalDeblur) exist to avoid applying one global factor to a map whose resolution varies.</div>
+  </div>
+</section>
+
+<section id="s7">
+  <span class="snum">§7 · Smith ch. 10–11 · Properties</span>
+  <h2>Four properties that do most of the work</h2>
+
+  <p>The Fourier transform has a long list of properties. Four of them account for nearly everything you do in cryo-EM, and they're worth memorising outright.</p>
+
+  <h3>1. The convolution theorem</h3>
+
+  <div class="eq">
+    <span class="lbl">The most useful identity in imaging</span>
+    x(r) <b>∗</b> h(r)   ⟷   X(k) <b>·</b> H(k)
+    <span class="where">Convolution in real space is multiplication in Fourier space. And the reverse: multiplication in real space is convolution in Fourier space. This single fact turns an expensive sliding-and-summing operation into a cheap element-by-element product.</span>
+  </div>
+
+  <p>This is why the CTF matters more than the PSF in practice. The image formation model in real space is an awkward convolution; transform it, and it becomes a simple multiplication of the specimen's transform by the CTF. Correcting it becomes a division (or a sign flip, or a Wiener-weighted division) rather than a deconvolution.</p>
+
+  <h3>2. The shift theorem</h3>
+
+  <div class="eq">
+    <span class="lbl">Movement is phase</span>
+    x(r − r₀)   ⟷   X(k) · e<sup>−2πi k·r₀</sup>
+    <span class="where">Shifting a signal in real space multiplies its transform by a linear phase ramp. Amplitudes are completely unchanged — only phases move. Reading it in reverse: applying a phase ramp in Fourier space shifts an image in real space, by any amount you like, including fractions of a pixel.</span>
+  </div>
+
+  <div class="widget">
+    <div class="widget-h">Interactive 7.1 — shift is a phase ramp</div>
+    <p class="widget-sub">Move the image and watch what happens to the two halves of its transform. The amplitude panel never changes. The phase panel is where all the action is.</p>
+    <div class="canvrow three">
+      <div><div class="canvlbl">Image, shifted</div><canvas id="c-sh-img" height="140"></canvas></div>
+      <div><div class="canvlbl">Amplitude |F|</div><canvas id="c-sh-amp" height="140"></canvas></div>
+      <div><div class="canvlbl">Phase arg(F)</div><canvas id="c-sh-ph" height="140"></canvas></div>
+    </div>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="sh-x">Shift in x</label>
+        <input type="range" id="sh-x" min="-32" max="32" step="0.25" value="0">
+        <output id="sh-x-o">0.00 px</output>
+      </div>
+      <div class="ctrl">
+        <label for="sh-y">Shift in y</label>
+        <input type="range" id="sh-y" min="-32" max="32" step="0.25" value="0">
+        <output id="sh-y-o">0.00 px</output>
+      </div>
+    </div>
+    <div class="readout" id="sh-out"></div>
+  </div>
+
+  <p>Note that the slider moves in quarter-pixel steps and the image still moves smoothly. That is not interpolation — it's the shift theorem doing exact sub-pixel translation via a phase ramp. This is how MotionCor2 and every particle-alignment routine apply fractional shifts without blurring the data.</p>
+
+  <h3>3. Reciprocity and scaling</h3>
+
+  <p>Stretch a signal in real space and its transform compresses, and vice versa. Narrow features need broad spectra. Already met in §5 with the spike, but worth naming: it explains why small particles are hard (their transforms are broad and low-amplitude), why a tight mask in real space causes broad correlations in Fourier space, and why a low-pass filter — cutting off the outer part of Fourier space — necessarily smooths real space.</p>
+
+  <h3>4. Hermitian (Friedel) symmetry</h3>
+
+  <p>If your input is real-valued — and a micrograph is just real numbers, there's no imaginary intensity — then its transform has a symmetry: <span class="k">F(−k) = F*(k)</span>. The value at any point equals the complex conjugate of the value diametrically opposite through the origin. Amplitudes are mirror-symmetric; phases are antisymmetric.</p>
+
+  <p>Practically this means <strong>half the transform is redundant</strong>. Software stores and computes only half, which halves memory and roughly halves the work. In crystallography the same relation is called Friedel's law. When you see a power spectrum with perfect two-fold symmetry, that's not a property of your specimen — it's a mathematical guarantee.</p>
+
+  <div class="mcq" data-correct="1">
+    <div class="mcq-h">Check yourself</div>
+    <p class="mcq-q">You want to test 500 different trial shifts of one image against a reference, to find the best alignment. Why does no one do this by direct comparison?</p>
+    <button class="mcq-opt">Direct comparison gives the wrong answer; only Fourier methods are correct.</button>
+    <button class="mcq-opt">It works but is wasteful — the convolution theorem lets you evaluate <em>all</em> shifts at once with two FFTs and a multiply, so the cost is essentially independent of how many shifts you test.</button>
+    <button class="mcq-opt">Because shifts must be integers in real space.</button>
+    <button class="mcq-opt">Because images are too large to compare directly.</button>
+    <div class="mcq-fb">This is the single biggest computational win in the whole pipeline. Cross-correlation via FFT computes the score for every possible shift simultaneously: forward-transform both, multiply one by the conjugate of the other, inverse-transform, and the resulting map's peak position <em>is</em> the best shift. Testing 500 shifts costs the same as testing 5. §12 goes through this properly.</div>
+  </div>
+</section>
+
+<section id="s8">
+  <span class="snum">§8 · Smith ch. 12 · The FFT</span>
+  <h2>Why the FFT changed everything</h2>
+
+  <p>The DFT as written in §5 requires, for each of N output frequencies, a sum over all N input points. That's N² operations. The <em class="term">Fast Fourier Transform</em> is an algorithm — not a different transform, the exact same answer — that exploits redundancy in those sums to get the job done in <strong>N log₂N</strong> operations.</p>
+
+  <p>For small N the difference is unimpressive. For the sizes we actually use, it's the difference between possible and impossible.</p>
+
+  <div class="widget">
+    <div class="widget-h">Interactive 8.1 — the cost of not having an FFT</div>
+    <p class="widget-sub">Choose a realistic processing job and see what the naive DFT would cost. The speedup factor is N/log₂N per one-dimensional transform, and it compounds across dimensions and across every particle and every iteration.</p>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="ff-box">Box size N</label>
+        <input type="range" id="ff-box" min="4" max="11" step="1" value="8">
+        <output id="ff-box-o">256 px</output>
+      </div>
+      <div class="ctrl">
+        <label for="ff-np">Particles</label>
+        <input type="range" id="ff-np" min="3" max="7" step="0.1" value="6">
+        <output id="ff-np-o">1.0M</output>
+      </div>
+      <div class="ctrl">
+        <label for="ff-it">Refine iters</label>
+        <input type="range" id="ff-it" min="1" max="40" step="1" value="20">
+        <output id="ff-it-o">20</output>
+      </div>
+    </div>
+    <div class="readout" id="ff-out"></div>
+  </div>
+
+  <div class="note payoff">
+    <span class="note-h">Cryo-EM payoff · why box sizes look the way they do</span>
+    <p>The classic FFT algorithm works by repeatedly splitting the transform in half, which is why powers of two are ideal. Modern libraries (FFTW, cuFFT) handle other sizes by factorising them — but only efficiently if the factors are <strong>small primes</strong>: 2, 3, 5, 7.</p>
+    <p>That's the whole reason for the peculiar list of "good" cryo-EM box sizes. 256 = 2⁸ and 320 = 2⁶ × 5 are excellent. 336 = 2⁴ × 3 × 7 is fine. But 314 = 2 × 157 contains a large prime factor and will run dramatically slower, because the library has to fall back to a general algorithm for that factor. If a job is mysteriously slow and the box size is odd or prime, that's the first thing to check.</p>
+    <p>The same logic explains a rule you may have absorbed without justification: always use even box sizes. Odd sizes complicate the placement of the Fourier origin and are poorly optimised almost everywhere.</p>
+  </div>
+</section>
+
+<section id="s9">
+  <span class="snum">§9 · The contrast transfer function</span>
+  <h2>The CTF: what your microscope actually does to information</h2>
+
+  <p>Everything so far converges here. The microscope is an LSI system (§3). Its impulse response is the PSF, and image formation is a convolution (§4). By the convolution theorem (§7), that convolution becomes a multiplication in Fourier space, and the thing you multiply by is the Fourier transform of the PSF: the <em class="term">contrast transfer function</em>.</p>
+
+  <p>The CTF tells you, for each spatial frequency, how much of the specimen's information reaches your image and with what sign. It is not a blur factor. It is an <strong>oscillating</strong> function that transfers some frequencies strongly, some weakly, some with inverted contrast, and some — at its zero crossings — not at all.</p>
+
+  <div class="eq">
+    <span class="lbl">The CTF (CTFFIND4 / RELION convention)</span>
+    CTF(k) = −[ √(1 − A²) · sin χ(k)  +  A · cos χ(k) ]<br><br>
+    χ(k) = π · λ · Δz · k²  −  (π/2) · C<sub>s</sub> · λ³ · k⁴  +  Δφ
+    <span class="where">
+      <b>k</b> spatial frequency (Å⁻¹) · <b>λ</b> electron wavelength (Å) · <b>Δz</b> defocus (Å, underfocus positive) · <b>C<sub>s</sub></b> spherical aberration (Å; 2.7 mm = 2.7×10⁷ Å) · <b>A</b> fractional amplitude contrast (≈0.07–0.10 in vitreous ice) · <b>Δφ</b> extra phase shift (0 normally, ≈π/2 with a Volta phase plate).<br><br>
+      χ is the <em>wave aberration function</em> — the phase error the microscope introduces at frequency k. The k² term is defocus, which you control. The k⁴ term is spherical aberration, fixed by the lens. Note the sign convention: packages differ, so always check before comparing numbers across software.
+    </span>
+  </div>
+
+  <div class="widget">
+    <div class="widget-h">Interactive 9.1 — the CTF simulator</div>
+    <p class="widget-sub">Left: the 1D CTF against spatial frequency, with resolution marked along the top. Right: the corresponding 2D power spectrum — the Thon rings you look at during collection. Move the defocus and watch the first zero migrate. Add astigmatism and watch the rings turn elliptical.</p>
+    <div class="canvrow two">
+      <div><div class="canvlbl">CTF(k)</div><canvas id="c-ctf" height="230"></canvas></div>
+      <div><div class="canvlbl">Simulated Thon rings</div><canvas id="c-thon" height="230"></canvas></div>
+    </div>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="ct-dz">Defocus</label>
+        <input type="range" id="ct-dz" min="0.2" max="4" step="0.05" value="1.0">
+        <output id="ct-dz-o">1.00 µm</output>
+      </div>
+      <div class="ctrl">
+        <label for="ct-kv">Voltage</label>
+        <input type="range" id="ct-kv" min="0" max="2" step="1" value="2">
+        <output id="ct-kv-o">300 kV</output>
+      </div>
+      <div class="ctrl">
+        <label for="ct-cs">Cs</label>
+        <input type="range" id="ct-cs" min="0" max="4.5" step="0.1" value="2.7">
+        <output id="ct-cs-o">2.7 mm</output>
+      </div>
+      <div class="ctrl">
+        <label for="ct-ac">Amp contrast</label>
+        <input type="range" id="ct-ac" min="0" max="0.2" step="0.01" value="0.1">
+        <output id="ct-ac-o">0.10</output>
+      </div>
+      <div class="ctrl">
+        <label for="ct-b">B-factor</label>
+        <input type="range" id="ct-b" min="0" max="300" step="5" value="80">
+        <output id="ct-b-o">80 Å²</output>
+      </div>
+      <div class="ctrl">
+        <label for="ct-ast">Astigmatism</label>
+        <input type="range" id="ct-ast" min="0" max="0.6" step="0.01" value="0">
+        <output id="ct-ast-o">0.00 µm</output>
+      </div>
+      <div class="ctrl">
+        <label for="ct-ps">Phase shift</label>
+        <input type="range" id="ct-ps" min="0" max="1" step="0.01" value="0">
+        <output id="ct-ps-o">0.00 π</output>
+      </div>
+    </div>
+    <div class="readout" id="ct-out"></div>
+  </div>
+
+  <h3>Reading the plot</h3>
+
+  <p>Five things to notice, each of which is a decision you make at the microscope:</p>
+
+  <ul>
+    <li><strong>The zeros are real information loss.</strong> Where CTF(k) = 0, that frequency is multiplied by zero. It isn't attenuated — it's gone. No filter can recover it from that image, because zero times anything is zero.</li>
+    <li><strong>Higher defocus pushes the first zero to lower resolution</strong> while boosting low-frequency contrast. That's the fundamental trade: high defocus makes particles easy to see and pick, but truncates useful information earlier. Low defocus preserves high-resolution transfer but gives images where the particles are nearly invisible.</li>
+    <li><strong>Collecting over a defocus range fixes the zeros.</strong> The zeros sit at different frequencies for different defoci. Combine images across a range and every frequency is well-transferred by <em>some</em> subset of your data. This is why you set a defocus range rather than a single value, and why a dataset all collected at one defocus has permanent holes in it.</li>
+    <li><strong>The envelope kills you before the zeros do.</strong> Turn up the B-factor and watch the oscillations damp out. This envelope — from partial coherence, energy spread, beam-induced motion and detector DQE — is what actually sets your practical resolution limit, and it's what sharpening later tries to compensate.</li>
+    <li><strong>Astigmatism makes the CTF two-dimensional.</strong> Defocus becomes direction-dependent, circular rings become ellipses, and a single 1D CTF no longer describes the image. This is why CTF estimation fits an astigmatic model, and why badly astigmatic images can't be salvaged by a scalar defocus correction.</li>
+  </ul>
+
+  <h3>Correcting it</h3>
+
+  <p>Three approaches, in increasing sophistication:</p>
+
+  <table class="map">
+    <tr><th>Method</th><th>What it does</th><th>Trade-off</th></tr>
+    <tr><td><b>Phase flipping</b></td><td>Multiplies by the sign of the CTF, flipping the negative lobes positive</td><td>Fixes phases only, leaves amplitudes wrong. Preserves noise statistics, which is why it's still used in some contexts</td></tr>
+    <tr><td><b>CTF multiplication</b></td><td>Multiplies the reference by the CTF rather than correcting the data</td><td>Used inside iterative refinement — you distort the model to match the data instead of the reverse. Statistically the cleanest option</td></tr>
+    <tr><td><b>Wiener filtering</b></td><td>Divides by the CTF, regularised by an SNR estimate to avoid blowing up at the zeros</td><td>Corrects phase and amplitude, but needs a spectral SNR estimate. This is what RELION's reconstruction effectively does</td></tr>
+  </table>
+
+  <p>None of them recovers a zero. Only combining multiple defoci does that.</p>
+
+  <div class="prob">
+    <div class="prob-h">Problem 9.1 — electron wavelength</div>
+    <p class="prob-q">Compute the relativistic electron wavelength at <strong>300 kV</strong>. Use λ = h / √(2m₀eV(1 + eV/2m₀c²)), with the relativistic correction term eV/2m₀c² = 300/1022 = 0.2935.</p>
+    <div class="prob-in">
+      <input type="text" id="p91" placeholder="λ in Å" data-ans="0.0197" data-tol="0.0004">
+      <span class="prob-unit">Å</span>
+      <span class="prob-verdict" id="p91-v"></span>
+    </div>
+    <details class="sol"><summary>Worked solution</summary>
+      <div class="sol-body">
+        <p>The non-relativistic shortcut first, as a sanity check:</p>
+        <div class="step">λ ≈ 12.26 / √V  = 12.26 / √300000 = 0.0224 Å</div>
+        <p>That's an overestimate, because at 300 kV the electron is moving fast enough that relativity matters — its mass is effectively 1.29× the rest mass. Applying the correction:</p>
+        <div class="step">λ = 12.26 / √(V · (1 + 0.978×10⁻⁶ V))  = 12.26 / √(300000 × 1.2935)</div>
+        <div class="step">λ = 12.26 / √388050 = 12.26 / 622.9 = 0.0197 Å</div>
+        <p class="ans">→ λ = 0.0197 Å at 300 kV</p>
+        <p style="margin-top:12px;color:var(--ink-dim)">Worth committing to memory: <b>0.0197 Å at 300 kV, 0.0251 Å at 200 kV, 0.0370 Å at 100 kV.</b> Note that the wavelength is roughly a hundred times smaller than the resolution you achieve — the limit is emphatically not diffraction, it's everything else.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="prob">
+    <div class="prob-h">Problem 9.2 — the first CTF zero</div>
+    <p class="prob-q">At 300 kV (λ = 0.0197 Å) with <strong>1.0 µm underfocus</strong>, at what resolution does the first CTF zero fall? Ignore Cs and amplitude contrast — at the first zero both are negligible.</p>
+    <div class="prob-in">
+      <input type="text" id="p92" placeholder="d in Å" data-ans="14.0" data-tol="0.6">
+      <span class="prob-unit">Å</span>
+      <span class="prob-verdict" id="p92-v"></span>
+    </div>
+    <details class="sol"><summary>Worked solution</summary>
+      <div class="sol-body">
+        <p>Zeros of the CTF occur where χ(k) = nπ. Dropping the Cs term, the first zero (n = 1) is at:</p>
+        <div class="step">π · λ · Δz · k² = π   →   k₁ = √( 1 / (λ · Δz) )</div>
+        <p>Watch the units — convert defocus to Ångström:</p>
+        <div class="step">Δz = 1.0 µm = 10⁴ Å</div>
+        <div class="step">λ · Δz = 0.0197 × 10⁴ = 197 Å²</div>
+        <div class="step">k₁ = √(1/197) = 0.0712 Å⁻¹</div>
+        <p>And the resolution is the reciprocal, which conveniently simplifies:</p>
+        <div class="step">d₁ = 1/k₁ = √(λ · Δz) = √197 = 14.0 Å</div>
+        <p class="ans">→ first zero at 14.0 Å</p>
+        <p style="margin-top:12px;color:var(--ink-dim)">The compact form <b>d₁ = √(λ · Δz)</b> is worth remembering — it lets you estimate the first zero in your head at the microscope. And note the √ scaling: at 2 µm defocus the first zero moves to √394 = 19.8 Å, a factor of √2 worse. Doubling defocus does <em>not</em> halve your first zero resolution.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="mcq" data-correct="2">
+    <div class="mcq-h">Check yourself</div>
+    <p class="mcq-q">Someone proposes collecting an entire dataset at a single defocus of 1.2 µm, for consistency. What's wrong?</p>
+    <button class="mcq-opt">Nothing — a consistent defocus makes CTF estimation more reliable.</button>
+    <button class="mcq-opt">1.2 µm is too low to see particles.</button>
+    <button class="mcq-opt">Every image would share identical CTF zeros, so those spatial frequencies would be missing from the entire dataset with no way to fill them.</button>
+    <button class="mcq-opt">Astigmatism cannot be estimated at a fixed defocus.</button>
+    <div class="mcq-fb">The zeros would coincide across every single micrograph, leaving permanent gaps in the transferred spatial frequencies. Averaging a million particles doesn't help, because zero times anything is still zero. A defocus range — typically something like 0.8–2.0 µm — staggers the zeros so that every frequency is well-transferred somewhere in the dataset, and the reconstruction fills the gaps by combining across defoci.</div>
+  </div>
+</section>
+
+<section id="s10">
+  <span class="snum">§10 · Projection-slice</span>
+  <h2>The theorem that makes 3D reconstruction possible</h2>
+
+  <p>Here is the problem. Your specimen is three-dimensional. Your images are two-dimensional projections — every image is the whole 3D object flattened along the beam direction. How do you get the 3D object back?</p>
+
+  <p>The answer is a single theorem, and it is the mathematical foundation of both single-particle analysis and tomography:</p>
+
+  <div class="eq">
+    <span class="lbl">The projection-slice theorem (central section theorem)</span>
+    FT<sub>2D</sub>[ projection of f along direction n̂ ]  =  central slice through FT<sub>3D</sub>[ f ] ⊥ n̂
+    <span class="where">The 2D Fourier transform of a projection image equals a flat plane cut through the 3D Fourier transform of the object — a plane passing through the origin, perpendicular to the direction you projected along.</span>
+  </div>
+
+  <p>Read that again slowly, because it's doing enormous work. It says a 2D image gives you a 2D <em>plane</em> of the 3D Fourier volume, for free, just by taking its FFT. Collect projections from many directions, transform each one, drop each into the 3D Fourier volume at the right orientation, and once you've filled the volume you inverse-transform it and you have your structure.</p>
+
+  <div class="widget">
+    <div class="widget-h">Interactive 10.1 — filling Fourier space</div>
+    <p class="widget-sub">Each projection direction you add contributes one central plane (shown edge-on as a line) to the 3D Fourier volume. Add orientations and watch coverage build. Switch to the preferred-orientation mode to see what happens when your particle refuses to tumble.</p>
+    <div class="canvrow two">
+      <div><div class="canvlbl">Fourier space coverage</div><canvas id="c-psl" height="240"></canvas></div>
+      <div><div class="canvlbl">Angular distribution</div><canvas id="c-psl2" height="240"></canvas></div>
+    </div>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="ps-n">Projections</label>
+        <input type="range" id="ps-n" min="1" max="200" step="1" value="12">
+        <output id="ps-n-o">12</output>
+      </div>
+    </div>
+    <div class="btnrow">
+      <button class="b on" data-ps="even">Even coverage</button>
+      <button class="b" data-ps="pref">Preferred orientation</button>
+      <button class="b" data-ps="tilt">Tomo tilt series (±60°)</button>
+    </div>
+    <div class="readout" id="ps-out"></div>
+  </div>
+
+  <div class="note payoff">
+    <span class="note-h">Cryo-EM payoff · two techniques, one theorem</span>
+    <p><strong>In SPA</strong>, every particle is the same object seen from a random orientation. Determining a particle's orientation is exactly determining <em>which plane</em> of Fourier space it contributes. Refinement is an iterative search: guess orientations, build a volume, re-compare, update. The reconstruction step itself is just inserting slices at the right angles and inverse-transforming.</p>
+    <p><strong>In tomography</strong>, you have one object and you deliberately tilt it, collecting a known set of orientations. Your 114 tilt series each contribute a fan of central planes at known angles. Same theorem, but the angles are given rather than searched for — which is why tomographic reconstruction is fast and SPA alignment is expensive.</p>
+    <p>Two more things fall out. <strong>Weighted back-projection</strong> is a real-space way of doing the same insertion; the "weighting" corrects for the fact that central planes all pass through the origin and therefore oversample low frequencies while undersampling high ones. And <strong>common lines</strong>: any two central planes intersect along a line through the origin, so two projections of the same object must agree along that line. That constraint is enough to determine relative orientations from scratch, which is the basis of ab initio reconstruction.</p>
+  </div>
+
+  <div class="mcq" data-correct="1">
+    <div class="mcq-h">Check yourself</div>
+    <p class="mcq-q">Why does preferred orientation limit resolution even when you have millions of particles?</p>
+    <button class="mcq-opt">Because preferred orientations have lower SNR.</button>
+    <button class="mcq-opt">Because the missing directions correspond to unsampled regions of 3D Fourier space — no number of particles in the <em>same</em> orientation can fill a plane you never measured.</button>
+    <button class="mcq-opt">Because the CTF is different in different orientations.</button>
+    <button class="mcq-opt">Because alignment algorithms fail on symmetric distributions.</button>
+    <div class="mcq-fb">Adding more particles at an orientation you already have improves the SNR of a plane you already measured — it does nothing for the planes you're missing. The result is anisotropic resolution: sharp in the well-sampled directions, smeared in the others. It's the same geometry as the missing wedge in tomography, and the remedies are physical rather than computational: tilted collection, detergent or support-film changes, or altering the air-water interface behaviour.</div>
+  </div>
+</section>
+
+<section id="s11">
+  <span class="snum">§11 · The missing wedge</span>
+  <h2>Why tomograms are blurred in Z</h2>
+
+  <p>In tomography you tilt the specimen and record a projection at each angle. By the projection-slice theorem, each tilt contributes a central plane at that angle. If you could tilt through the full ±90°, you'd fill Fourier space completely.</p>
+
+  <p>You can't. As you tilt, the effective thickness of the specimen grows as <span class="k">1/cos(θ)</span> — at 60° the beam is passing through twice as much ice as at 0°, and at 80° nearly six times as much. Beyond about 60–70° the images become unusable, and the holder physically collides with the pole piece. So the tilt range stops at roughly <strong>±60°</strong>, and the unmeasured angles leave a wedge-shaped void in Fourier space.</p>
+
+  <div class="widget">
+    <div class="widget-h">Interactive 11.1 — the wedge and what it does</div>
+    <p class="widget-sub">Left: Fourier space coverage from your tilt range, with the missing wedge in red. Right: a simulated reconstruction of a spherical object under that coverage. Narrow the tilt range and watch the sphere elongate.</p>
+    <div class="canvrow two">
+      <div><div class="canvlbl">Fourier coverage (X–Z plane)</div><canvas id="c-mw1" height="220"></canvas></div>
+      <div><div class="canvlbl">Effect on a reconstructed sphere</div><canvas id="c-mw2" height="220"></canvas></div>
+    </div>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="mw-range">Tilt range ±</label>
+        <input type="range" id="mw-range" min="20" max="90" step="1" value="60">
+        <output id="mw-range-o">60°</output>
+      </div>
+      <div class="ctrl">
+        <label for="mw-step">Tilt increment</label>
+        <input type="range" id="mw-step" min="1" max="10" step="0.5" value="3">
+        <output id="mw-step-o">3.0°</output>
+      </div>
+    </div>
+    <div class="readout" id="mw-out"></div>
+  </div>
+
+  <div class="note payoff">
+    <span class="note-h">Cryo-EM payoff · reading your own tomograms</span>
+    <p>Every artefact you've noticed in a tomogram traces back to this wedge:</p>
+    <ul>
+      <li><strong>Elongation in Z.</strong> Spherical objects become ellipsoids stretched along the beam axis. Membranes perpendicular to the beam look crisp; membranes parallel to it fade or vanish entirely. That's not sample damage — it's missing data.</li>
+      <li><strong>Anisotropic resolution.</strong> Your resolution is genuinely direction-dependent, best in-plane and worst along Z. A single resolution number for a tomogram is misleading.</li>
+      <li><strong>Why subtomogram averaging works so well.</strong> If your particles sit in the tomogram at many different orientations, each copy has its missing wedge pointing in a different direction relative to the particle. Averaging them fills in each other's wedges. This is the central reason subtomogram averaging can exceed what any single tomogram shows — and why particles that all sit in the <em>same</em> orientation (say, lying flat on a membrane) average much less well.</li>
+      <li><strong>Dose-symmetric tilt schemes.</strong> The Hagen scheme collects low tilts first, when the specimen is least damaged, because those tilts carry the most information per image. It's an explicit acknowledgement that not all tilts are equal.</li>
+    </ul>
+    <p>Deep-learning methods (IsoNet and relatives) attempt to fill the wedge by learning what plausible density looks like. Useful for visualisation and segmentation; treat inferred density with appropriate suspicion when making structural claims.</p>
+  </div>
+
+  <div class="prob">
+    <div class="prob-h">Problem 11.1 — how much of Fourier space do you actually have?</div>
+    <p class="prob-q">You collect a tilt series over <strong>±60°</strong>. What fraction of the full angular range in the tilt plane have you sampled?</p>
+    <div class="prob-in">
+      <input type="text" id="p111" placeholder="%" data-ans="66.7" data-tol="3">
+      <span class="prob-unit">%</span>
+      <span class="prob-verdict" id="p111-v"></span>
+    </div>
+    <details class="sol"><summary>Worked solution</summary>
+      <div class="sol-body">
+        <p>The full range needed is ±90°, i.e. 180°. You covered ±60°, i.e. 120°:</p>
+        <div class="step">fraction = 120° / 180° = 0.667 = 66.7%</div>
+        <p class="ans">→ two-thirds sampled, one-third missing</p>
+        <p style="margin-top:12px;color:var(--ink-dim)">A third of Fourier space simply absent — which is a much larger deficit than most people picture when they hear "missing wedge". Pushing to ±70° gets you to 78%, which is why high-tilt schemes are worth the effort when the sample is thin enough to survive them. Going the other way, a ±40° range leaves you with only 44%, and the reconstruction becomes hard to interpret in Z at all.</p>
+      </div>
+    </details>
+  </div>
+</section>
+
+<section id="s12">
+  <span class="snum">§12 · Cross-correlation</span>
+  <h2>How everything gets aligned</h2>
+
+  <p>Alignment is the operation you run more than any other. Motion correction aligns movie frames. Particle picking matches templates. 2D classification aligns particles to class averages. Refinement aligns particles to projections of a 3D model. Tilt-series alignment registers tilts to each other. All of it is <em class="term">cross-correlation</em>, and all of it runs on the convolution theorem.</p>
+
+  <p>Naively: to find how much image B is shifted relative to image A, try every possible shift, compute a similarity score for each, and take the best. For a 400×400 image that's 160,000 trial shifts, each requiring 160,000 multiplications. Utterly impractical.</p>
+
+  <p>Via the convolution theorem, the entire cross-correlation map — the score at every possible shift, simultaneously — comes from:</p>
+
+  <div class="eq">
+    <span class="lbl">Cross-correlation by FFT</span>
+    CC(r) = FT⁻¹[ <b>A(k)</b> · <b>B*(k)</b> ]
+    <span class="where">Transform both images, multiply one by the complex conjugate of the other, inverse-transform. The position of the peak in the result is the shift; its height is the quality of the match. Cost: three FFTs and one multiply, regardless of how many shifts you're searching over.</span>
+  </div>
+
+  <div class="widget">
+    <div class="widget-h">Interactive 12.1 — find the shift</div>
+    <p class="widget-sub">A reference and a shifted, noisy copy. The cross-correlation map is computed live by FFT; the peak marks the recovered shift. Add noise until the peak drowns — that transition is exactly the point at which alignment fails in real data.</p>
+    <div class="canvrow three">
+      <div><div class="canvlbl">Reference</div><canvas id="c-cc-a" height="140"></canvas></div>
+      <div><div class="canvlbl">Shifted + noisy</div><canvas id="c-cc-b" height="140"></canvas></div>
+      <div><div class="canvlbl">Cross-correlation</div><canvas id="c-cc-c" height="140"></canvas></div>
+    </div>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="cc-dx">True shift x</label>
+        <input type="range" id="cc-dx" min="-24" max="24" step="1" value="9">
+        <output id="cc-dx-o">9</output>
+      </div>
+      <div class="ctrl">
+        <label for="cc-dy">True shift y</label>
+        <input type="range" id="cc-dy" min="-24" max="24" step="1" value="-6">
+        <output id="cc-dy-o">-6</output>
+      </div>
+      <div class="ctrl">
+        <label for="cc-noise">Noise level</label>
+        <input type="range" id="cc-noise" min="0" max="400" step="5" value="60">
+        <output id="cc-noise-o">0.60</output>
+      </div>
+    </div>
+    <div class="readout" id="cc-out"></div>
+  </div>
+
+  <div class="note payoff">
+    <span class="note-h">Cryo-EM payoff · where you meet this</span>
+    <ul>
+      <li><strong>Motion correction.</strong> MotionCor2 cross-correlates movie frames to measure beam-induced motion, then applies the measured shifts. Because it works in patches, it corrects anisotropic motion across the field. The sub-pixel shifts are applied via the shift theorem — a phase ramp, not interpolation.</li>
+      <li><strong>Template-based particle picking.</strong> Classical pickers cross-correlate templates against the micrograph and threshold the peaks. crYOLO takes a different route — a trained convolutional network rather than explicit correlation — which is why it handles crowded and low-contrast micrographs better, and why its failure modes are different (it fails on things unlike its training data rather than on things that correlate poorly).</li>
+      <li><strong>Refinement.</strong> Every iteration compares each particle against many projections of the current model. The translational part of that search is cross-correlation; the rotational part is a discrete search over angles. This is why refinement cost scales with angular sampling but barely with box size — the shifts come for free.</li>
+      <li><strong>Sub-pixel accuracy.</strong> The correlation peak can be located to a fraction of a pixel by fitting its shape or by upsampling the transform around the peak. This is not a refinement of a discrete answer; it's genuinely continuous information available in the phases.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="s13">
+  <span class="snum">§13 · FSC</span>
+  <h2>Resolution: what the number actually means</h2>
+
+  <p>"3.2 Å" is a strange kind of number. It isn't measured with a ruler and it isn't a property of your map alone — it's a statement about <strong>reproducibility</strong>. The measurement that produces it is the <em class="term">Fourier Shell Correlation</em>.</p>
+
+  <p>The procedure: split your particles randomly into two halves and refine each half completely independently. Reconstruct two maps. Fourier transform both. Then, for each spherical shell of spatial frequency, compute the correlation between the two maps' complex Fourier coefficients:</p>
+
+  <div class="eq">
+    <span class="lbl">Fourier Shell Correlation</span>
+    FSC(k) = Σ<sub>shell</sub> F₁ · F₂*  /  √( Σ<sub>shell</sub>|F₁|² · Σ<sub>shell</sub>|F₂|² )
+    <span class="where">Summed over all voxels in the shell at spatial frequency k. The result runs from 1 (the halves agree perfectly at that frequency) down to 0 (they're uncorrelated — whatever is there is noise). Because the coefficients are complex, this is sensitive to phase agreement, not just to matching power.</span>
+  </div>
+
+  <p>Plot FSC against spatial frequency and you get a curve that starts near 1 at low frequency and falls to zero at high frequency. Your reported resolution is where it crosses a threshold — conventionally <strong>0.143</strong>.</p>
+
+  <div class="widget">
+    <div class="widget-h">Interactive 13.1 — the FSC curve</div>
+    <p class="widget-sub">A simulated FSC. Vary the quality factors and see where the curve crosses each threshold. Note how differently the 0.5 and 0.143 criteria report on the same map — and what a mask that's too tight does to the curve.</p>
+    <canvas id="c-fsc" height="280"></canvas>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="fs-n">Particles</label>
+        <input type="range" id="fs-n" min="3" max="6.5" step="0.05" value="5">
+        <output id="fs-n-o">100k</output>
+      </div>
+      <div class="ctrl">
+        <label for="fs-b">B-factor</label>
+        <input type="range" id="fs-b" min="20" max="250" step="5" value="90">
+        <output id="fs-b-o">90 Å²</output>
+      </div>
+      <div class="ctrl">
+        <label for="fs-mask">Mask tightness</label>
+        <input type="range" id="fs-mask" min="0" max="100" step="1" value="20">
+        <output id="fs-mask-o">loose</output>
+      </div>
+    </div>
+    <div class="readout" id="fs-out"></div>
+  </div>
+
+  <h3>Why 0.143, and why gold-standard</h3>
+
+  <p>The 0.143 threshold comes from Rosenthal and Henderson's 2003 analysis, which asked what level of half-map correlation corresponds to a map with enough information to be interpretable — roughly, the point at which the map's information content is comparable to what a crystallographic structure at that resolution would carry. Van Heel and Schatz later noted that 0.143 is numerically close to their independently-derived half-bit information criterion, which is reassuring but not the same argument.</p>
+
+  <p>The important thing is that 0.143 is a <strong>convention grounded in a statistical argument</strong>, not a physical constant. It assumes the two half-maps are genuinely independent. The older 0.5 threshold is more conservative and is still used for map-to-model comparisons.</p>
+
+  <div class="note warn">
+    <span class="note-h">Where FSC misleads</span>
+    <ul>
+      <li><strong>Correlated half-maps.</strong> If both halves were refined against a common reference, or if particles from the same micrograph ended up split across halves in a correlated way, the halves aren't independent and the FSC is optimistic. This is exactly why <em>gold-standard</em> refinement — completely independent processing from a low-pass filtered starting point — became the standard.</li>
+      <li><strong>Tight masks.</strong> A mask with a sharp edge correlates the noise inside it between the two halves, inflating the FSC at high frequency. Move the mask slider on the interactive above and watch the tail lift artificially. The correction is <strong>phase randomisation</strong> above a chosen frequency, which measures how much of the FSC the mask alone is responsible for and subtracts it.</li>
+      <li><strong>It's one number for a heterogeneous map.</strong> A well-ordered core and a floppy peripheral domain give one global FSC that describes neither. <strong>Local resolution</strong> estimation applies FSC in moving windows and produces a map of resolution, which is nearly always more informative than the global figure.</li>
+      <li><strong>Imposed symmetry.</strong> Applying symmetry averages equivalent regions, raising the FSC. Legitimate if the symmetry is real; badly misleading if it isn't.</li>
+    </ul>
+  </div>
+
+  <div class="mcq" data-correct="2">
+    <div class="mcq-h">Check yourself</div>
+    <p class="mcq-q">Your FSC curve has a long flat tail near 0.2 that suddenly drops at Nyquist. What should you suspect first?</p>
+    <button class="mcq-opt">The particle has genuine high-resolution features.</button>
+    <button class="mcq-opt">The B-factor is unusually low.</button>
+    <button class="mcq-opt">Mask-induced correlation — the mask is too tight or its edge too sharp, correlating noise between the half-maps. Check with phase randomisation.</button>
+    <button class="mcq-opt">The particles were misaligned.</button>
+    <div class="mcq-fb">A flat elevated tail is the signature of a masking artefact. Real signal decays; a tail that just sits at some constant value is usually the mask correlating noise between the halves. RELION's post-processing runs phase randomisation automatically to measure and subtract this. If the corrected curve drops away cleanly, the tail was the mask; if it survives, you may have real signal. Either way the tail is a thing to investigate rather than to report.</div>
+  </div>
+</section>
+
+<section id="s14">
+  <span class="snum">§14 · Filtering</span>
+  <h2>Low-pass, high-pass, and sharpening</h2>
+
+  <p>Now that Fourier space is a place you can reason about, filtering is trivial to describe: multiply the transform by something, transform back. What you multiply by determines the filter.</p>
+
+  <ul>
+    <li><strong>Low-pass</strong> — keep low frequencies, suppress high. Smooths and denoises. Used constantly: initial models are low-pass filtered to 40–60 Å to prevent refinement from locking onto noise features; maps are filtered to their measured resolution before display so you're not looking at frequencies the data doesn't support.</li>
+    <li><strong>High-pass</strong> — remove low frequencies. Flattens background gradients from uneven ice or illumination.</li>
+    <li><strong>Band-pass</strong> — keep a range. Used in particle picking to suppress both background gradients and high-frequency noise, leaving the size scale of your particle.</li>
+  </ul>
+
+  <p>Always taper the filter edge. A hard cutoff in Fourier space is a sharp edge, and a sharp edge in one domain means ringing in the other (§5, reciprocity again). Hard-cut low-pass filters produce visible ripples around features in real space.</p>
+
+  <h3>Sharpening</h3>
+
+  <p>Your map's high-frequency amplitudes are systematically too weak. The microscope's envelope, beam-induced motion, and residual misalignment all attenuate high frequencies, so a correctly reconstructed map still looks blurrier than its FSC resolution suggests. Sharpening compensates by boosting those amplitudes:</p>
+
+  <div class="eq">
+    <span class="lbl">B-factor sharpening</span>
+    F<sub>sharp</sub>(k) = F(k) · exp( −B · k² / 4 )
+    <span class="where">with B negative for sharpening (e.g. −100 Å²). Applied to <b>amplitudes only</b> — phases are untouched. The value of B is usually estimated from the slope of a Guinier plot (log amplitude against k²), following Rosenthal &amp; Henderson.</span>
+  </div>
+
+  <div class="widget">
+    <div class="widget-h">Interactive 14.1 — sharpening and its cost</div>
+    <p class="widget-sub">A simulated 1D density profile with realistic amplitude decay. Sharpen it and watch features resolve — then keep going and watch noise take over. There's an optimum, and it isn't at the extreme.</p>
+    <canvas id="c-sharp" height="260"></canvas>
+    <div class="ctrls">
+      <div class="ctrl">
+        <label for="sp-b">Sharpening B</label>
+        <input type="range" id="sp-b" min="-300" max="0" step="5" value="0">
+        <output id="sp-b-o">0 Å²</output>
+      </div>
+      <div class="ctrl">
+        <label for="sp-res">Map resolution</label>
+        <input type="range" id="sp-res" min="2" max="8" step="0.1" value="3.2">
+        <output id="sp-res-o">3.2 Å</output>
+      </div>
+    </div>
+    <div class="readout" id="sp-out"></div>
+  </div>
+
+  <div class="note payoff">
+    <span class="note-h">Cryo-EM payoff · the honest version</span>
+    <p>Sharpening rescales amplitudes. It does not create information, correct phases, or improve resolution. What it does is restore the <em>relative weighting</em> between frequencies so that detail already present in the map becomes visible to your eye and to model-building software.</p>
+    <p>Over-sharpening amplifies noise along with signal and produces maps that look crisp but contain spurious features — broken density, false side-chain-like blobs. Because the useful B varies across a map (a rigid core and a flexible periphery need different treatment), <strong>local sharpening</strong> methods (LocScale, LocalDeblur, Phenix AutoSharpen) apply a resolution-dependent scaling instead of one global factor. For a map with substantial flexibility, local sharpening is usually worth the extra step.</p>
+  </div>
+</section>
+
+<section id="s15">
+  <span class="snum">§15 · Consolidation</span>
+  <h2>Mixed problem set</h2>
+
+  <p>These mix the sections. Work them on paper before opening the solutions — the point is the reasoning chain, not the arithmetic.</p>
+
+  <div class="prob">
+    <div class="prob-h">Problem A — a full calculation chain</div>
+    <p class="prob-q">You are at a 200 kV Glacios (λ = 0.0251 Å), Cs = 2.7 mm, pixel size 1.2 Å/pixel, defocus 1.5 µm. (i) What is your Nyquist resolution? (ii) Where is the first CTF zero? (iii) Is the first zero inside or outside your Nyquist limit?</p>
+    <div class="prob-in">
+      <input type="text" id="pA" placeholder="first zero, Å" data-ans="19.4" data-tol="0.8">
+      <span class="prob-unit">Å</span>
+      <span class="prob-verdict" id="pA-v"></span>
+    </div>
+    <details class="sol"><summary>Worked solution</summary>
+      <div class="sol-body">
+        <p><strong>(i)</strong> Nyquist:</p>
+        <div class="step">d_Nyq = 2 × 1.2 = 2.4 Å</div>
+        <p><strong>(ii)</strong> First zero, using d₁ = √(λ·Δz) with Δz = 1.5 µm = 15,000 Å:</p>
+        <div class="step">λ · Δz = 0.0251 × 15000 = 376.5 Å²</div>
+        <div class="step">d₁ = √376.5 = 19.4 Å</div>
+        <p><strong>(iii)</strong> 19.4 Å is a much <em>coarser</em> resolution than 2.4 Å, so the first zero falls well inside the resolution range you can sample. There will be many CTF oscillations between 19.4 Å and Nyquist — which is exactly what you want, because it means you have plenty of Thon rings to fit and CTF estimation will be well-constrained.</p>
+        <p class="ans">→ Nyquist 2.4 Å; first zero 19.4 Å; many oscillations in between</p>
+        <p style="margin-top:12px;color:var(--ink-dim)">If the first zero ever fell <em>beyond</em> Nyquist — which happens at very low defocus and coarse pixel size — you'd see no Thon rings at all, and CTF estimation would fail with no clear error message. That's a real failure mode worth recognising.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="prob">
+    <div class="prob-h">Problem B — diagnosing a stall</div>
+    <p class="prob-q">Your refinement plateaus at 8 Å with 300,000 particles. A collaborator suggests collecting 300,000 more. Assuming the limit were purely SNR (it usually isn't), what resolution improvement would doubling the dataset buy, in terms of SNR gain?</p>
+    <div class="prob-in">
+      <input type="text" id="pB" placeholder="SNR gain ×" data-ans="1.414" data-tol="0.06">
+      <span class="prob-unit">×</span>
+      <span class="prob-verdict" id="pB-v"></span>
+    </div>
+    <details class="sol"><summary>Worked solution</summary>
+      <div class="sol-body">
+        <div class="step">gain = √(600,000 / 300,000) = √2 = 1.41×</div>
+        <p class="ans">→ a 41% SNR improvement for double the microscope time</p>
+        <p style="margin-top:12px;color:var(--ink-dim)">And that translates into a much smaller resolution gain, because resolution depends on SNR through the steep exponential of the B-factor envelope, not linearly. More to the point: a plateau at 8 Å with 300k particles is almost never an SNR problem. The usual culprits are conformational heterogeneity (needs 3D classification), preferred orientation (needs a Fourier-space coverage fix, §10), or alignment error (needs better initial models or per-particle CTF refinement). The √N calculation is most useful as an argument for <em>not</em> collecting more data until you've ruled those out.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="prob">
+    <div class="prob-h">Problem C — the tomography version</div>
+    <p class="prob-q">Your tilt series runs ±60° in 3° increments. How many tilts is that, and what fraction of Fourier space in the tilt plane do you cover?</p>
+    <div class="prob-in">
+      <input type="text" id="pC" placeholder="number of tilts" data-ans="41" data-tol="1">
+      <span class="prob-unit">tilts</span>
+      <span class="prob-verdict" id="pC-v"></span>
+    </div>
+    <details class="sol"><summary>Worked solution</summary>
+      <div class="sol-body">
+        <div class="step">range = 120°, step = 3°  →  120/3 = 40 intervals, so 41 tilts (including 0°)</div>
+        <div class="step">coverage = 120/180 = 66.7%</div>
+        <p class="ans">→ 41 tilts, two-thirds of Fourier space</p>
+        <p style="margin-top:12px;color:var(--ink-dim)">With 114 tilt series at 41 tilts each you're handling around 4,700 individual images — which is why the tomography pipeline is so much more bookkeeping-heavy than SPA, and why per-tilt-series metadata errors are the dominant failure mode. Note also that the tilt <em>increment</em> controls how finely you sample within the wedge, while the tilt <em>range</em> controls how big the wedge is. They're different problems: a finer increment won't fix a narrow range.</p>
+      </div>
+    </details>
+  </div>
+
+  <div class="mcq" data-correct="0">
+    <div class="mcq-h">Synthesis</div>
+    <p class="mcq-q">Trace the chain: why is the CTF a <em>multiplication</em> in Fourier space rather than something more complicated?</p>
+    <button class="mcq-opt">Because the microscope is LSI, so image formation is a convolution with the PSF in real space; and by the convolution theorem, convolution in real space is multiplication in Fourier space. The CTF is the Fourier transform of the PSF.</button>
+    <button class="mcq-opt">Because Fourier transforms turn all operations into multiplications.</button>
+    <button class="mcq-opt">Because the electron wavelength is very small.</button>
+    <button class="mcq-opt">Because detectors record intensity rather than amplitude.</button>
+    <div class="mcq-fb">That chain — linearity → convolution → convolution theorem → multiplication — is the spine of this whole module. If you can reconstruct it unprompted, you have the conceptual core. Everything else in cryo-EM image processing hangs off it: CTF correction is undoing that multiplication, the projection-slice theorem tells you which part of Fourier space each image occupies, and FSC measures how well two independent attempts at the reconstruction agree.</div>
+  </div>
+</section>
+
+<section id="s16">
+  <span class="snum">§16 · Reading map</span>
+  <h2>Where to go in Smith, and what to skip</h2>
+
+  <p>This page is a companion. The reading is the actual work. Smith's book is free at dspguide.com; here's the mapping, and an honest note on which chapters earn their time.</p>
+
+  <table class="map">
+    <tr><th>Section here</th><th>Smith chapter</th><th>Priority</th></tr>
+    <tr><td>§2</td><td><b>Ch 2 — Statistics, Probability and Noise</b></td><td>Essential. Short and easy. Read all of it.</td></tr>
+    <tr><td>§1</td><td><b>Ch 3 — ADC and DAC</b></td><td>Read the sampling theorem and aliasing sections. Skip the hardware detail on ADC circuits.</td></tr>
+    <tr><td>—</td><td>Ch 4 — DSP Software</td><td>Skip. Dated numerical-precision material.</td></tr>
+    <tr><td>§3</td><td><b>Ch 5 — Linear Systems</b></td><td>Essential and short. The decomposition argument is the key idea.</td></tr>
+    <tr><td>§4</td><td><b>Ch 6 — Convolution</b></td><td>Essential. Work through both the input-side and output-side views until you can switch between them.</td></tr>
+    <tr><td>§4</td><td>Ch 7 — Properties of Convolution</td><td>Skim. Useful, not critical.</td></tr>
+    <tr><td>§5</td><td><b>Ch 8 — The DFT</b></td><td>The most important chapter in the book for you. Read slowly, twice.</td></tr>
+    <tr><td>§5, §6</td><td><b>Ch 9 — Applications of the DFT</b></td><td>Essential. Spectral leakage and windowing especially.</td></tr>
+    <tr><td>§7</td><td><b>Ch 10 — Fourier Transform Properties</b></td><td>Essential. The convolution and shift theorems earn their keep here.</td></tr>
+    <tr><td>§7</td><td>Ch 11 — Fourier Transform Pairs</td><td>Skim as a reference. Come back when you need a specific pair.</td></tr>
+    <tr><td>§8</td><td>Ch 12 — The FFT</td><td>Read the "how fast" section; the butterfly algorithm detail is optional unless you enjoy it.</td></tr>
+  </table>
+
+  <h3>Where Smith stops and cryo-EM starts</h3>
+
+  <p>Smith covers §1–§8 of this page thoroughly. He has nothing on the CTF, the projection-slice theorem, the missing wedge, or FSC — those are cryo-EM specialisations built on top of his foundation. For those, in rough order of usefulness:</p>
+
+  <ul>
+    <li><strong>Grant Jensen's <em>Getting Started in Cryo-EM</em></strong> (cryo-em-course.caltech.edu) — Part 2 on Fourier transforms and reciprocal space, Part 3 on image formation and the CTF. Concept-first with minimal maths. If any section here felt too abstract, watch the corresponding Jensen module and come back.</li>
+    <li><strong>Kevin Cowtan's Book of Fourier</strong> (ysbl.york.ac.uk/~cowtan/fourier) — the original duck-and-cat demonstration and a set of pictorial 2D transforms. Twenty minutes well spent after §6.</li>
+    <li><strong>3Blue1Brown's Fourier transform video</strong> — the winding-a-graph-around-a-circle intuition. The best single explanation of <em>why</em> the transform works that exists.</li>
+    <li><strong>The Jiang Lab CTF simulator</strong> (jianglab.science.psu.edu/ctfsimulation) — a fuller version of Interactive 9.1, including applying a simulated CTF to arbitrary images.</li>
+    <li><strong>Rosenthal &amp; Henderson (2003)</strong>, <em>J. Mol. Biol.</em> 333:721 — the source of both the 0.143 FSC threshold and B-factor sharpening. Dense but worth reading once you've finished this module; it will be legible in a way it wouldn't have been before.</li>
+  </ul>
+
+  <div class="note aside">
+    <span class="note-h">A closing note on the gap</span>
+    <p>The feeling that algorithm discussions are a foreign language is not a sign that something went wrong. Software like cryoSPARC and RELION is deliberately built so you don't need any of this to get a structure — that's the point of it. Which means operational competence arrives first and theoretical fluency lags behind, for nearly everyone who learns the practice before the maths.</p>
+    <p>What closes the gap is exposure at a steady rate, not intensity. An hour a day for a few weeks and the vocabulary in this module stops being vocabulary and starts being how you think about your data. The material isn't hard so much as it is unfamiliar, and unfamiliarity has a reliable cure.</p>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   FFT engine — iterative radix-2, used by every Fourier widget
+   ============================================================ */
+function fft(re, im, inv){
+  const n = re.length;
+  for(let i=1, j=0; i<n; i++){
+    let bit = n>>1;
+    for(; j & bit; bit >>= 1) j ^= bit;
+    j ^= bit;
+    if(i < j){
+      let t=re[i]; re[i]=re[j]; re[j]=t;
+      t=im[i]; im[i]=im[j]; im[j]=t;
+    }
+  }
+  for(let len=2; len<=n; len<<=1){
+    const ang = 2*Math.PI/len * (inv ? 1 : -1);
+    const wr = Math.cos(ang), wi = Math.sin(ang);
+    const half = len>>1;
+    for(let i=0; i<n; i+=len){
+      let cwr=1, cwi=0;
+      for(let j=0; j<half; j++){
+        const ur=re[i+j], ui=im[i+j];
+        const br=re[i+j+half], bi=im[i+j+half];
+        const vr = br*cwr - bi*cwi;
+        const vi = br*cwi + bi*cwr;
+        re[i+j]=ur+vr; im[i+j]=ui+vi;
+        re[i+j+half]=ur-vr; im[i+j+half]=ui-vi;
+        const nwr = cwr*wr - cwi*wi;
+        cwi = cwr*wi + cwi*wr; cwr = nwr;
+      }
+    }
+  }
+  if(inv){ for(let i=0;i<n;i++){ re[i]/=n; im[i]/=n; } }
+}
+
+function fft2(re, im, N, inv){
+  const rr = new Float64Array(N), ri = new Float64Array(N);
+  for(let y=0; y<N; y++){
+    const o = y*N;
+    for(let x=0;x<N;x++){ rr[x]=re[o+x]; ri[x]=im[o+x]; }
+    fft(rr, ri, inv);
+    for(let x=0;x<N;x++){ re[o+x]=rr[x]; im[o+x]=ri[x]; }
+  }
+  for(let x=0; x<N; x++){
+    for(let y=0;y<N;y++){ rr[y]=re[y*N+x]; ri[y]=im[y*N+x]; }
+    fft(rr, ri, inv);
+    for(let y=0;y<N;y++){ re[y*N+x]=rr[y]; im[y*N+x]=ri[y]; }
+  }
+}
+
+/* ============================================================
+   canvas + drawing helpers
+   ============================================================ */
+const CSS = getComputedStyle(document.documentElement);
+const C = {
+  ink:  CSS.getPropertyValue('--ink').trim()      || '#E8EBF7',
+  dim:  CSS.getPropertyValue('--ink-dim').trim()  || '#9BA4C8',
+  faint:CSS.getPropertyValue('--ink-faint').trim()|| '#69739B',
+  cyan: CSS.getPropertyValue('--cyan').trim()     || '#3FD0DE',
+  violet:CSS.getPropertyValue('--violet').trim()  || '#A08CF5',
+  amber:CSS.getPropertyValue('--amber').trim()    || '#F5B342',
+  rose: CSS.getPropertyValue('--rose').trim()     || '#F2557E',
+  mint: CSS.getPropertyValue('--mint').trim()     || '#5FD6A4',
+  rule: 'rgba(155,164,200,.22)',
+  bg:   CSS.getPropertyValue('--panel-2').trim()  || '#141B30'
+};
+const MONO = '11px "IBM Plex Mono", monospace';
+const MONO9 = '9.5px "IBM Plex Mono", monospace';
+
+function setup(cv){
+  if(!cv) return null;
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  const w = cv.clientWidth || 600;
+  const h = parseInt(cv.getAttribute('height')) || 200;
+  cv.width  = Math.round(w*dpr);
+  cv.height = Math.round(h*dpr);
+  cv.style.height = h+'px';
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);
+  return {ctx, w, h};
+}
+function gridline(ctx,x1,y1,x2,y2,col,dash){
+  ctx.save(); ctx.strokeStyle=col||C.rule; ctx.lineWidth=1;
+  if(dash) ctx.setLineDash(dash);
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke(); ctx.restore();
+}
+function label(ctx,t,x,y,col,align,font){
+  ctx.save(); ctx.fillStyle=col||C.faint; ctx.font=font||MONO9;
+  ctx.textAlign=align||'left'; ctx.fillText(t,x,y); ctx.restore();
+}
+/* render a Float64Array as a greyscale image on a canvas, auto-scaled */
+function drawField(cv, data, N, opts){
+  opts = opts||{};
+  const s = setup(cv); if(!s) return;
+  const {ctx,w,h} = s;
+  let lo=Infinity, hi=-Infinity;
+  for(let i=0;i<data.length;i++){ const v=data[i]; if(v<lo)lo=v; if(v>hi)hi=v; }
+  if(hi-lo < 1e-12) hi = lo+1;
+  const img = ctx.createImageData(N,N);
+  for(let i=0;i<N*N;i++){
+    let t = (data[i]-lo)/(hi-lo);
+    if(opts.gamma) t = Math.pow(t, opts.gamma);
+    const v = Math.max(0,Math.min(255, Math.round(t*255)));
+    img.data[i*4]=v; img.data[i*4+1]=v; img.data[i*4+2]=v; img.data[i*4+3]=255;
+  }
+  const off = document.createElement('canvas');
+  off.width=N; off.height=N;
+  off.getContext('2d').putImageData(img,0,0);
+  ctx.imageSmoothingEnabled = opts.smooth !== false;
+  const side = Math.min(w,h);
+  ctx.drawImage(off, (w-side)/2, (h-side)/2, side, side);
+}
+function bindRange(id, fmt, cb){
+  const el = document.getElementById(id);
+  const out = document.getElementById(id+'-o');
+  if(!el) return null;
+  const upd = ()=>{ if(out) out.textContent = fmt(parseFloat(el.value)); cb(); };
+  el.addEventListener('input', upd);
+  upd();
+  return el;
+}
+
+/* ============================================================
+   1.1  Aliasing
+   ============================================================ */
+(function(){
+  const cv = document.getElementById('c-alias'); if(!cv) return;
+  function draw(){
+    const fsig = parseFloat(document.getElementById('a-fsig').value);
+    const fs   = parseFloat(document.getElementById('a-fs').value);
+    const s = setup(cv); if(!s) return;
+    const {ctx,w,h} = s;
+    const pad = 34, mid = h/2, amp = (h-2*pad)/2;
+    const nyq = fs/2;
+    /* apparent (aliased) frequency */
+    let fa = Math.abs(fsig - fs*Math.round(fsig/fs));
+
+    gridline(ctx, pad, mid, w-pad, mid, C.rule);
+
+    /* true continuous signal */
+    ctx.strokeStyle = C.faint; ctx.lineWidth = 1.6; ctx.beginPath();
+    for(let px=pad; px<=w-pad; px++){
+      const t = (px-pad)/(w-2*pad);
+      const y = mid - amp*Math.sin(2*Math.PI*fsig*t);
+      px===pad ? ctx.moveTo(px,y) : ctx.lineTo(px,y);
+    }
+    ctx.stroke();
+
+    /* what the samples imply */
+    const aliased = Math.abs(fa - fsig) > 1e-6;
+    ctx.strokeStyle = aliased ? C.rose : C.mint;
+    ctx.lineWidth = 2.2; ctx.beginPath();
+    for(let px=pad; px<=w-pad; px++){
+      const t = (px-pad)/(w-2*pad);
+      const y = mid - amp*Math.sin(2*Math.PI*fa*t);
+      px===pad ? ctx.moveTo(px,y) : ctx.lineTo(px,y);
+    }
+    ctx.stroke();
+
+    /* sample points */
+    const nsamp = Math.floor(fs)+1;
+    ctx.fillStyle = C.cyan;
+    for(let i=0;i<=fs;i++){
+      const t = i/fs;
+      if(t>1) break;
+      const px = pad + t*(w-2*pad);
+      const y = mid - amp*Math.sin(2*Math.PI*fsig*t);
+      gridline(ctx, px, mid, px, y, 'rgba(63,208,222,.30)');
+      ctx.beginPath(); ctx.arc(px,y,3.2,0,7); ctx.fill();
+    }
+
+    label(ctx,'true signal', pad, 16, C.faint, 'left', MONO);
+    label(ctx, aliased?'what the samples say (ALIASED)':'what the samples say', w-pad, 16,
+          aliased?C.rose:C.mint, 'right', MONO);
+    label(ctx,'samples', pad, h-10, C.cyan, 'left', MONO9);
+
+    const out = document.getElementById('a-out');
+    out.innerHTML = aliased
+      ? 'Signal <b>'+fsig.toFixed(1)+' Hz</b> is above Nyquist (<b>'+nyq.toFixed(1)+' Hz</b>). '
+        + 'It has folded back and is masquerading as <b>'+fa.toFixed(1)+' Hz</b>. '
+        + 'The samples are internally consistent and completely wrong — nothing downstream can detect or undo this.'
+      : 'Signal <b>'+fsig.toFixed(1)+' Hz</b> is below Nyquist (<b>'+nyq.toFixed(1)+' Hz</b>). '
+        + 'The samples fully determine the continuous signal — no information lost. '
+        + 'In cryo-EM terms: sampling at pixel size p resolves detail down to 2p, and no finer.';
+  }
+  bindRange('a-fsig', v=>v.toFixed(1)+' Hz', draw);
+  bindRange('a-fs',   v=>v.toFixed(0)+' Hz', draw);
+  window.addEventListener('resize', draw);
+})();
+
+/* ============================================================
+   2.1  Averaging / SNR
+   ============================================================ */
+(function(){
+  const cvT = document.getElementById('c-avgT'); if(!cvT) return;
+  const N = 72;
+  /* ground truth: a ring of subunits, faintly asymmetric */
+  const truth = new Float64Array(N*N);
+  (function(){
+    const cx=N/2, cy=N/2;
+    for(let k=0;k<7;k++){
+      const a = k/7*2*Math.PI;
+      const bx = cx + Math.cos(a)*17, by = cy + Math.sin(a)*17;
+      const r = 6.0 + (k===3?1.6:0);
+      for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+        const d2=(x-bx)*(x-bx)+(y-by)*(y-by);
+        truth[y*N+x] += Math.exp(-d2/(2*r*r));
+      }
+    }
+    for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+      const d2=(x-cx)*(x-cx)+(y-cy)*(y-cy);
+      truth[y*N+x] += 0.55*Math.exp(-d2/(2*40));
+    }
+  })();
+  let sigS=0, mean=0;
+  for(let i=0;i<truth.length;i++) mean+=truth[i]; mean/=truth.length;
+  for(let i=0;i<truth.length;i++) sigS+=(truth[i]-mean)**2; sigS=Math.sqrt(sigS/truth.length);
+
+  function gauss(){ let u=0,v=0; while(u===0)u=Math.random(); while(v===0)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+
+  function draw(){
+    const n   = parseInt(document.getElementById('v-n').value);
+    const snr = parseFloat(document.getElementById('v-snr').value);
+    const sigN = sigS/Math.sqrt(snr);
+    const one = new Float64Array(N*N), avg = new Float64Array(N*N);
+    const effN = sigN/Math.sqrt(n);
+    for(let i=0;i<N*N;i++){
+      one[i] = truth[i] + sigN*gauss();
+      avg[i] = truth[i] + effN*gauss();
+    }
+    drawField(document.getElementById('c-avg1'), one, N, {smooth:false});
+    drawField(document.getElementById('c-avgN'), avg, N, {smooth:false});
+    drawField(cvT, truth, N);
+    document.getElementById('c-avglbl').textContent = 'Average of '+n.toLocaleString();
+    const gain = Math.sqrt(n), newSnr = snr*n;
+    const rose = Math.ceil(Math.pow(5/snr,2));
+    document.getElementById('v-out').innerHTML =
+      'SNR gain <b>×'+gain.toFixed(1)+'</b> → effective SNR <b>'+newSnr.toFixed(2)+'</b>. '
+      + (newSnr>=5 ? 'Above the Rose criterion of 5 — structure should be plainly visible.'
+                   : 'Below the Rose criterion of 5. You need <b>'+rose.toLocaleString()+'</b> particles at this single-image SNR just to <i>see</i> the shape.')
+      + '<br>A real micrograph sits around SNR 0.1. Every 2D class average you have ever looked at is this widget.';
+  }
+  bindRange('v-n',   v=>Math.round(v).toLocaleString(), draw);
+  bindRange('v-snr', v=>v.toFixed(2), draw);
+  window.addEventListener('resize', draw);
+})();
+
+/* ============================================================
+   4.1  Convolution
+   ============================================================ */
+(function(){
+  const cv = document.getElementById('c-conv'); if(!cv) return;
+  const N = 256;
+  let kern = 'gauss';
+  const sig = new Float64Array(N);
+  for(let i=40;i<58;i++) sig[i]=1;
+  sig[110]=1.6;
+  for(let i=160;i<172;i++) sig[i]=0.7;
+  for(let i=178;i<190;i++) sig[i]=0.7;
+
+  function makeKernel(w){
+    const K = new Float64Array(N);
+    const c = N/2;
+    for(let i=0;i<N;i++){
+      const d = i-c;
+      if(kern==='gauss')      K[i] = Math.exp(-d*d/(2*w*w/4));
+      else if(kern==='box')   K[i] = Math.abs(d)<=w/2 ? 1 : 0;
+      else                    K[i] = Math.exp(-d*d/(2*w*w))*Math.cos(d*Math.PI/(w*0.55));
+    }
+    let s=0; for(let i=0;i<N;i++) s+=Math.abs(K[i]);
+    if(s>0) for(let i=0;i<N;i++) K[i]/=s;
+    return K;
+  }
+  function conv(x,k){
+    const y = new Float64Array(N), c=N/2;
+    for(let n=0;n<N;n++){
+      let acc=0;
+      for(let m=0;m<N;m++){
+        const idx = n-m+c;
+        if(idx>=0 && idx<N) acc += x[m]*k[idx];
+      }
+      y[n]=acc;
+    }
+    return y;
+  }
+  function trace(ctx,arr,x0,y0,pw,ph,col,fill){
+    let lo=Infinity,hi=-Infinity;
+    for(let i=0;i<arr.length;i++){ if(arr[i]<lo)lo=arr[i]; if(arr[i]>hi)hi=arr[i]; }
+    const span = Math.max(hi-lo, 1e-9);
+    const zero = y0+ph - (0-lo)/span*ph;
+    gridline(ctx,x0,zero,x0+pw,zero,C.rule);
+    ctx.beginPath();
+    for(let i=0;i<arr.length;i++){
+      const px = x0 + i/(arr.length-1)*pw;
+      const py = y0+ph - (arr[i]-lo)/span*ph;
+      i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    }
+    ctx.strokeStyle=col; ctx.lineWidth=1.8; ctx.stroke();
+    if(fill){ ctx.lineTo(x0+pw,zero); ctx.lineTo(x0,zero); ctx.closePath();
+      ctx.fillStyle=col.replace(')',',.13)').replace('rgb','rgba'); ctx.fill(); }
+    return {zero, lo, hi, span};
+  }
+  function draw(){
+    const w = parseFloat(document.getElementById('cv-w').value);
+    const pos = parseInt(document.getElementById('cv-pos').value);
+    const s = setup(cv); if(!s) return;
+    const {ctx, w:W, h:H} = s;
+    const pad=42, pw=W-pad-14, ph=(H-70)/3;
+    const K = makeKernel(w), Y = conv(sig,K);
+
+    trace(ctx, sig, pad, 8, pw, ph, C.cyan);
+    label(ctx,'input x[n]', pad, 8+10, C.cyan,'left',MONO9);
+    trace(ctx, K, pad, 8+ph+16, pw, ph, C.violet);
+    label(ctx,'kernel h[n]', pad, 8+ph+26, C.violet,'left',MONO9);
+    trace(ctx, Y, pad, 8+2*(ph+16), pw, ph, C.amber);
+    label(ctx,'output y[n] = x ∗ h', pad, 8+2*(ph+16)+10, C.amber,'left',MONO9);
+
+    /* the sliding marker */
+    const px = pad + pos/(N-1)*pw;
+    gridline(ctx, px, 4, px, H-8, 'rgba(245,179,66,.45)', [3,3]);
+
+    /* show the kernel positioned at the marker, over the input */
+    ctx.save(); ctx.globalAlpha=.55; ctx.strokeStyle=C.violet; ctx.lineWidth=1.1;
+    ctx.beginPath();
+    let kmax=0; for(let i=0;i<N;i++) kmax=Math.max(kmax,Math.abs(K[i]));
+    for(let i=0;i<N;i++){
+      const idx = pos - i + N/2;
+      const v = (idx>=0&&idx<N) ? K[idx] : 0;
+      const xx = pad + i/(N-1)*pw;
+      const yy = 8+ph - v/kmax*ph*0.85;
+      i===0?ctx.moveTo(xx,yy):ctx.lineTo(xx,yy);
+    }
+    ctx.stroke(); ctx.restore();
+
+    let overlap=0;
+    for(let m=0;m<N;m++){ const idx=pos-m+N/2; if(idx>=0&&idx<N) overlap += sig[m]*K[idx]; }
+    document.getElementById('cv-out').innerHTML =
+      'At n = <b>'+pos+'</b> the output is the sum of input × flipped kernel = <b>'+overlap.toFixed(4)+'</b>. '
+      + 'That single multiply-and-sum, repeated for every n, <i>is</i> convolution.'
+      + (kern==='ring' ? '<br>Note the dark fringes flanking bright features — an oscillating kernel does not just blur, it inverts contrast at some scales. That is the CTF, in real space.' : '')
+      + (kern==='box'  ? '<br>The box kernel gives hard-edged smearing and visible ringing in Fourier space — this is why filters are always tapered.' : '');
+  }
+  bindRange('cv-w',   v=>v.toFixed(0), draw);
+  bindRange('cv-pos', v=>v.toFixed(0), draw);
+  document.querySelectorAll('[data-kern]').forEach(b=>{
+    b.addEventListener('click',()=>{
+      document.querySelectorAll('[data-kern]').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on'); kern=b.dataset.kern; draw();
+    });
+  });
+  window.addEventListener('resize', draw);
+})();
+
+/* ============================================================
+   5.1  Fourier synthesis
+   ============================================================ */
+(function(){
+  const cv = document.getElementById('c-syn'); if(!cv) return;
+  const NH = 8;
+  const amps = [1,0,0,0,0,0,0,0];
+  const holder = document.getElementById('syn-ctrls');
+  for(let k=0;k<NH;k++){
+    const d = document.createElement('div'); d.className='ctrl';
+    d.innerHTML = '<label>harmonic '+(k+1)+'</label>'
+      + '<input type="range" min="-100" max="100" step="1" value="'+(amps[k]*100)+'" data-h="'+k+'">'
+      + '<output>'+amps[k].toFixed(2)+'</output>';
+    holder.appendChild(d);
+  }
+  const sliders = holder.querySelectorAll('input');
+  function draw(){
+    const s1 = setup(cv), s2 = setup(document.getElementById('c-spec'));
+    if(!s1||!s2) return;
+    /* waveform */
+    const {ctx,w,h}=s1, pad=16, mid=h/2, amp=h/2-pad;
+    gridline(ctx,pad,mid,w-pad,mid,C.rule);
+    ctx.beginPath(); ctx.strokeStyle=C.cyan; ctx.lineWidth=2;
+    for(let px=pad;px<=w-pad;px++){
+      const t=(px-pad)/(w-2*pad);
+      let v=0; for(let k=0;k<NH;k++) v += amps[k]*Math.sin(2*Math.PI*(k+1)*t);
+      const y = mid - v/2.2*amp;
+      px===pad?ctx.moveTo(px,y):ctx.lineTo(px,y);
+    }
+    ctx.stroke();
+    /* spectrum */
+    const c2=s2.ctx, w2=s2.w, h2=s2.h, p2=22;
+    gridline(c2,p2,h2-p2,w2-10,h2-p2,C.rule);
+    const bw=(w2-p2-14)/NH;
+    for(let k=0;k<NH;k++){
+      const a=Math.abs(amps[k]);
+      const bh=a*(h2-2*p2);
+      c2.fillStyle = amps[k]<0 ? C.rose : C.violet;
+      c2.fillRect(p2+k*bw+bw*0.22, h2-p2-bh, bw*0.56, bh);
+      label(c2,(k+1)+'', p2+k*bw+bw*0.5, h2-p2+13, C.faint,'center');
+    }
+    label(c2,'amplitude', p2, 14, C.faint,'left',MONO9);
+    label(c2,'harmonic number →', w2-12, h2-4, C.faint,'right',MONO9);
+    const nonzero = amps.filter(a=>Math.abs(a)>0.01).length;
+    document.getElementById('syn-out').innerHTML =
+      '<b>'+nonzero+'</b> of '+NH+' harmonics active. Left and right panels hold identical information in different coordinates — '
+      + 'that is all a Fourier transform is: a change of basis, not a change of content.';
+  }
+  sliders.forEach(sl=>sl.addEventListener('input',()=>{
+    const k=+sl.dataset.h; amps[k]=+sl.value/100;
+    sl.nextElementSibling.textContent = amps[k].toFixed(2); draw();
+  }));
+  function preset(kind){
+    for(let k=0;k<NH;k++){
+      const n=k+1;
+      if(kind==='square') amps[k] = (n%2===1) ? 1/n : 0;
+      else if(kind==='saw') amps[k] = (n%2===1?1:-1)/n;
+      else if(kind==='spike') amps[k] = 0.55;
+      else amps[k]=0;
+    }
+    sliders.forEach((sl,k)=>{ sl.value=amps[k]*100; sl.nextElementSibling.textContent=amps[k].toFixed(2); });
+    draw();
+  }
+  document.querySelectorAll('[data-syn]').forEach(b=>
+    b.addEventListener('click',()=>preset(b.dataset.syn)));
+  draw();
+  window.addEventListener('resize', draw);
+})();
+
+/* ============================================================
+   6.1  Amplitude / phase swap  (real 2D FFTs)
+   ============================================================ */
+(function(){
+  if(!document.getElementById('c-fa')) return;
+  const N = 128;
+  function makeA(){ /* three discs in an asymmetric triangle */
+    const d = new Float64Array(N*N);
+    const discs=[[40,42,17],[92,36,13],[62,94,20]];
+    discs.forEach(([bx,by,r])=>{
+      for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+        const dist=Math.hypot(x-bx,y-by);
+        d[y*N+x]+= 1/(1+Math.exp((dist-r)*1.4));
+      }
+    });
+    return d;
+  }
+  function makeB(){ /* horizontal bars — completely different geometry */
+    const d = new Float64Array(N*N);
+    for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+      d[y*N+x] = 0.5+0.5*Math.cos(y*2*Math.PI/16);
+    }
+    for(let y=52;y<76;y++)for(let x=20;x<108;x++) d[y*N+x]+=0.9;
+    return d;
+  }
+  function forward(src){
+    const re=Float64Array.from(src), im=new Float64Array(N*N);
+    fft2(re,im,N,false);
+    return {re,im};
+  }
+  function hybridise(phaseFrom, ampFrom){
+    const re=new Float64Array(N*N), im=new Float64Array(N*N);
+    for(let i=0;i<N*N;i++){
+      const ph = Math.atan2(phaseFrom.im[i], phaseFrom.re[i]);
+      const mag= Math.hypot(ampFrom.re[i], ampFrom.im[i]);
+      re[i]=mag*Math.cos(ph); im[i]=mag*Math.sin(ph);
+    }
+    fft2(re,im,N,true);
+    return re;
+  }
+  const A=makeA(), B=makeB();
+  const FA=forward(A), FB=forward(B);
+  const AB = hybridise(FA,FB);
+  const BA = hybridise(FB,FA);
+  function render(){
+    drawField(document.getElementById('c-fa'), A, N);
+    drawField(document.getElementById('c-fb'), B, N);
+    drawField(document.getElementById('c-fab'), AB, N);
+    drawField(document.getElementById('c-fba'), BA, N);
+    document.getElementById('f-out').innerHTML =
+      'Bottom left keeps <b>A\u2019s phases</b> \u2014 you can still see the three discs. Bottom right keeps <b>B\u2019s phases</b> \u2014 the stripes survive. '
+      + 'Each hybrid resembles the parent that supplied its <b>phases</b>, not the one that supplied its amplitudes. '
+      + 'Amplitude contributed texture and contrast; phase carried the identity. '
+      + 'This is Cowtan\u2019s duck-and-cat demonstration, recomputed live with two 128\u00d7128 FFTs.';
+  }
+  render();
+  window.addEventListener('resize', render);
+})();
+
+/* ============================================================
+   7.1  Shift theorem
+   ============================================================ */
+(function(){
+  if(!document.getElementById('c-sh-img')) return;
+  const N = 64;
+  const base = new Float64Array(N*N);
+  (function(){
+    for(let k=0;k<4;k++){
+      const a=k/4*2*Math.PI+0.4;
+      const bx=N/2+Math.cos(a)*11, by=N/2+Math.sin(a)*11;
+      for(let y=0;y<N;y++)for(let x=0;x<N;x++)
+        base[y*N+x]+=Math.exp(-((x-bx)**2+(y-by)**2)/(2*4));
+    }
+    for(let y=0;y<N;y++)for(let x=0;x<N;x++)
+      base[y*N+x]+=1.3*Math.exp(-((x-N/2)**2+(y-N/2)**2)/(2*2.5));
+  })();
+  const F0re=Float64Array.from(base), F0im=new Float64Array(N*N);
+  fft2(F0re,F0im,N,false);
+
+  function drawSpec(cv, re, im, mode){
+    const s=setup(cv); if(!s) return;
+    const {ctx,w,h}=s;
+    const img=ctx.createImageData(N,N);
+    let mx=0;
+    for(let i=0;i<N*N;i++) mx=Math.max(mx, Math.log(1+Math.hypot(re[i],im[i])));
+    for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+      const sx=(x+N/2)%N, sy=(y+N/2)%N;   /* fftshift */
+      const i=sy*N+sx, o=(y*N+x)*4;
+      let r,g,b;
+      if(mode==='amp'){
+        const v=Math.round(Math.log(1+Math.hypot(re[i],im[i]))/mx*255);
+        r=g=b=v;
+      } else {
+        const ph=Math.atan2(im[i],re[i]);
+        const t=(ph+Math.PI)/(2*Math.PI);
+        /* dim the phase where there is no amplitude — otherwise it is just noise */
+        const w=0.18+0.82*Math.pow(Math.log(1+Math.hypot(re[i],im[i]))/mx, 0.45);
+        r=Math.round(255*w*Math.max(0,Math.min(1,1.5-Math.abs(t*6-3))));
+        g=Math.round(255*w*Math.max(0,Math.min(1,1.5-Math.abs(t*6-2))));
+        b=Math.round(255*w*Math.max(0,Math.min(1,1.5-Math.abs(t*6-4))));
+      }
+      img.data[o]=r; img.data[o+1]=g; img.data[o+2]=b; img.data[o+3]=255;
+    }
+    const off=document.createElement('canvas'); off.width=off.height=N;
+    off.getContext('2d').putImageData(img,0,0);
+    const side=Math.min(w,h);
+    ctx.imageSmoothingEnabled=false;
+    ctx.drawImage(off,(w-side)/2,(h-side)/2,side,side);
+  }
+  function draw(){
+    const dx=parseFloat(document.getElementById('sh-x').value);
+    const dy=parseFloat(document.getElementById('sh-y').value);
+    const re=new Float64Array(N*N), im=new Float64Array(N*N);
+    for(let ky=0;ky<N;ky++){
+      const fy = ky<N/2 ? ky : ky-N;
+      for(let kx=0;kx<N;kx++){
+        const fx = kx<N/2 ? kx : kx-N;
+        const ang = -2*Math.PI*(fx*dx+fy*dy)/N;
+        const cr=Math.cos(ang), ci=Math.sin(ang);
+        const i=ky*N+kx;
+        re[i]=F0re[i]*cr - F0im[i]*ci;
+        im[i]=F0re[i]*ci + F0im[i]*cr;
+      }
+    }
+    drawSpec(document.getElementById('c-sh-amp'), re, im, 'amp');
+    drawSpec(document.getElementById('c-sh-ph'),  re, im, 'phase');
+    const sre=Float64Array.from(re), sim=Float64Array.from(im);
+    fft2(sre,sim,N,true);
+    drawField(document.getElementById('c-sh-img'), sre, N);
+    document.getElementById('sh-out').innerHTML =
+      'Shift = (<b>'+dx.toFixed(2)+'</b>, <b>'+dy.toFixed(2)+'</b>) px. '
+      + 'The amplitude panel is <b>pixel-for-pixel identical</b> at every shift — check it. '
+      + 'All the positional information lives in the phase, which now winds through the colour wheel in stripes — that is the ramp. '
+      + 'Quarter-pixel steps move the image smoothly because this is exact translation, not interpolation.';
+  }
+  bindRange('sh-x', v=>v.toFixed(2)+' px', draw);
+  bindRange('sh-y', v=>v.toFixed(2)+' px', draw);
+  window.addEventListener('resize', draw);
+})();
+
+/* ============================================================
+   8.1  FFT cost
+   ============================================================ */
+(function(){
+  if(!document.getElementById('ff-box')) return;
+  function draw(){
+    const p = parseInt(document.getElementById('ff-box').value);
+    const N = Math.pow(2,p);
+    const np = Math.pow(10, parseFloat(document.getElementById('ff-np').value));
+    const it = parseInt(document.getElementById('ff-it').value);
+    const naive2d = Math.pow(N,4);
+    const fft2d   = 2*N*N*Math.log2(N);
+    const speed   = naive2d/fft2d;
+    const total   = np*it;
+    const FLOPS   = 1e11;
+    const tf = total*fft2d/FLOPS;
+    const tn = total*naive2d/FLOPS;
+    function human(sec){
+      if(sec<90) return sec.toFixed(1)+' seconds';
+      if(sec<5400) return (sec/60).toFixed(1)+' minutes';
+      if(sec<172800) return (sec/3600).toFixed(1)+' hours';
+      if(sec<3.15e7) return (sec/86400).toFixed(1)+' days';
+      const y=sec/3.15e7;
+      return y>1e6 ? y.toExponential(2)+' years' : y.toFixed(1)+' years';
+    }
+    document.getElementById('ff-box-o').textContent = N+' px';
+    document.getElementById('ff-np-o').textContent =
+      np>=1e6 ? (np/1e6).toFixed(1)+'M' : (np/1e3).toFixed(0)+'k';
+    document.getElementById('ff-it-o').textContent = it;
+    document.getElementById('ff-out').innerHTML =
+      'One 2D transform: naive DFT <b>'+naive2d.toExponential(2)+'</b> ops vs FFT <b>'+fft2d.toExponential(2)+'</b> ops '
+      + '— a speedup of <b>×'+speed.toExponential(2)+'</b>.<br>'
+      + 'Across '+ (np>=1e6?(np/1e6).toFixed(1)+'M':(np/1e3).toFixed(0)+'k') +' particles × '+it+' iterations, at ~10¹¹ ops/s:<br>'
+      + 'with FFT ≈ <b>'+human(tf)+'</b> · without FFT ≈ <b>'+human(tn)+'</b>.<br>'
+      + 'That gap is the difference between a routine overnight job and something longer than the age of the universe.';
+  }
+  ['ff-box','ff-np','ff-it'].forEach(id=>
+    document.getElementById(id).addEventListener('input',draw));
+  draw();
+})();
+
+/* ============================================================
+   9.1  CTF simulator
+   ============================================================ */
+(function(){
+  const cv = document.getElementById('c-ctf'); if(!cv) return;
+  const LAMBDA = [0.0370, 0.0251, 0.0197];   /* 100, 200, 300 kV */
+  const KVLAB  = ['100 kV','200 kV','300 kV'];
+  const PIXEL  = 1.0;                        /* Å/px, so k_nyq = 0.5 Å⁻¹ */
+  const KMAX   = 0.5;
+
+  function ctfAt(k, lam, dz, cs, ac, ps, B){
+    const chi = Math.PI*lam*dz*k*k - 0.5*Math.PI*cs*Math.pow(lam,3)*Math.pow(k,4) + ps;
+    const val = -( Math.sqrt(1-ac*ac)*Math.sin(chi) + ac*Math.cos(chi) );
+    return val*Math.exp(-B*k*k/4);
+  }
+  function draw(){
+    const dzum = parseFloat(document.getElementById('ct-dz').value);
+    const kvi  = parseInt(document.getElementById('ct-kv').value);
+    const csmm = parseFloat(document.getElementById('ct-cs').value);
+    const ac   = parseFloat(document.getElementById('ct-ac').value);
+    const B    = parseFloat(document.getElementById('ct-b').value);
+    const astm = parseFloat(document.getElementById('ct-ast').value);
+    const psPi = parseFloat(document.getElementById('ct-ps').value);
+    const lam  = LAMBDA[kvi];
+    const dz   = dzum*1e4;        /* µm → Å */
+    const cs   = csmm*1e7;        /* mm → Å */
+    const ps   = psPi*Math.PI;
+
+    document.getElementById('ct-kv-o').textContent  = KVLAB[kvi];
+    document.getElementById('ct-dz-o').textContent  = dzum.toFixed(2)+' µm';
+    document.getElementById('ct-cs-o').textContent  = csmm.toFixed(1)+' mm';
+    document.getElementById('ct-ac-o').textContent  = ac.toFixed(2);
+    document.getElementById('ct-b-o').textContent   = B.toFixed(0)+' Å²';
+    document.getElementById('ct-ast-o').textContent = astm.toFixed(2)+' µm';
+    document.getElementById('ct-ps-o').textContent  = psPi.toFixed(2)+' π';
+
+    /* ---- 1D plot ---- */
+    const s = setup(cv); if(!s) return;
+    const {ctx,w,h}=s;
+    const padL=34, padR=12, padT=26, padB=30;
+    const pw=w-padL-padR, ph=h-padT-padB, mid=padT+ph/2;
+    gridline(ctx,padL,mid,w-padR,mid,C.rule);
+    gridline(ctx,padL,padT,padL,padT+ph,C.rule);
+    /* resolution ticks */
+    [30,10,6,4,3,2.5].forEach(d=>{
+      const k=1/d; if(k>KMAX) return;
+      const px=padL+k/KMAX*pw;
+      gridline(ctx,px,padT,px,padT+ph,'rgba(155,164,200,.10)');
+      label(ctx,d+'Å',px,padT-9,C.faint,'center');
+    });
+    /* envelope */
+    ctx.beginPath(); ctx.strokeStyle='rgba(245,179,66,.45)'; ctx.lineWidth=1.2; ctx.setLineDash([4,3]);
+    for(let px=0;px<=pw;px++){
+      const k=px/pw*KMAX, e=Math.exp(-B*k*k/4);
+      const y=mid-e*ph/2;
+      px===0?ctx.moveTo(padL+px,y):ctx.lineTo(padL+px,y);
+    }
+    ctx.stroke();
+    ctx.beginPath();
+    for(let px=0;px<=pw;px++){
+      const k=px/pw*KMAX, e=Math.exp(-B*k*k/4);
+      const y=mid+e*ph/2;
+      px===0?ctx.moveTo(padL+px,y):ctx.lineTo(padL+px,y);
+    }
+    ctx.stroke(); ctx.setLineDash([]);
+    /* the CTF itself */
+    ctx.beginPath(); ctx.strokeStyle=C.cyan; ctx.lineWidth=1.7;
+    for(let px=0;px<=pw;px++){
+      const k=px/pw*KMAX;
+      const y=mid-ctfAt(k,lam,dz,cs,ac,ps,B)*ph/2;
+      px===0?ctx.moveTo(padL+px,y):ctx.lineTo(padL+px,y);
+    }
+    ctx.stroke();
+    /* find zeros */
+    const zeros=[];
+    let prev=ctfAt(1e-6,lam,dz,cs,ac,ps,0);
+    for(let i=1;i<=3000;i++){
+      const k=i/3000*KMAX;
+      const v=ctfAt(k,lam,dz,cs,ac,ps,0);
+      if(prev*v<0 && zeros.length<9) zeros.push(k);
+      prev=v;
+    }
+    zeros.slice(0,6).forEach((k,i)=>{
+      const px=padL+k/KMAX*pw;
+      gridline(ctx,px,mid-6,px,mid+6,C.rose);
+      if(i===0){
+        ctx.fillStyle=C.rose; ctx.beginPath(); ctx.arc(px,mid,3.4,0,7); ctx.fill();
+        label(ctx,'1st zero',px, mid+22, C.rose,'center',MONO9);
+      }
+    });
+    label(ctx,'CTF',padL+4,padT+10,C.cyan,'left',MONO9);
+    label(ctx,'+1',padL-6,padT+8,C.faint,'right');
+    label(ctx,'−1',padL-6,padT+ph,C.faint,'right');
+    label(ctx,'spatial frequency →  Nyquist '+ (2*PIXEL).toFixed(1)+' Å', w-padR, h-8, C.faint,'right',MONO9);
+
+    /* ---- 2D Thon rings ---- */
+    const cvT=document.getElementById('c-thon');
+    const s2=setup(cvT);
+    if(s2){
+      const M=190;
+      const img=s2.ctx.createImageData(M,M);
+      const ast=astm*1e4;
+      for(let y=0;y<M;y++)for(let x=0;x<M;x++){
+        const fx=(x-M/2)/(M/2), fy=(y-M/2)/(M/2);
+        const r=Math.hypot(fx,fy);
+        const k=r*KMAX;
+        let v=0;
+        if(r<=1){
+          const th=Math.atan2(fy,fx);
+          const dzl = dz + ast*Math.cos(2*th);
+          const c = ctfAt(k,lam,dzl,cs,ac,ps,B);
+          v = c*c;                               /* power spectrum ∝ CTF² */
+          v = Math.pow(v,0.55);
+          v = v*0.88 + 0.06 + 0.06*Math.random();
+        }
+        const g=Math.max(0,Math.min(255,Math.round(v*255)));
+        const o=(y*M+x)*4;
+        img.data[o]=g; img.data[o+1]=g; img.data[o+2]=g; img.data[o+3]=255;
+      }
+      const off=document.createElement('canvas'); off.width=off.height=M;
+      off.getContext('2d').putImageData(img,0,0);
+      const side=Math.min(s2.w,s2.h);
+      s2.ctx.drawImage(off,(s2.w-side)/2,(s2.h-side)/2,side,side);
+    }
+
+    const d1 = zeros.length ? 1/zeros[0] : Infinity;
+    const approx = Math.sqrt(lam*dz);
+    const nvis = zeros.filter(k=>Math.exp(-B*k*k/4)>0.05).length;
+    document.getElementById('ct-out').innerHTML =
+      'First zero at <b>'+(isFinite(d1)?d1.toFixed(1)+' Å':'beyond Nyquist')+'</b> '
+      + '(the √(λ·Δz) estimate gives <b>'+approx.toFixed(1)+' Å</b>). '
+      + '<b>'+zeros.length+'</b> zeros before Nyquist, of which about <b>'+nvis+'</b> survive the envelope — '
+      + 'that is roughly how many Thon rings you would actually see.<br>'
+      + (astm>0.05 ? 'Astigmatism is making the rings elliptical: defocus now depends on direction, so no single scalar defocus describes this image. ' : '')
+      + (psPi>0.05 ? 'The phase shift moves the CTF towards a cosine, boosting low-frequency contrast — this is what a Volta phase plate does at Δφ = 0.5π. ' : '')
+      + (B>200 ? 'At this B-factor the envelope has killed almost everything past the first couple of zeros.' : '');
+  }
+  ['ct-dz','ct-kv','ct-cs','ct-ac','ct-b','ct-ast','ct-ps'].forEach(id=>
+    document.getElementById(id).addEventListener('input',draw));
+  draw();
+  window.addEventListener('resize', draw);
+})();
+
+/* ============================================================
+   10.1  Projection-slice / Fourier coverage
+   ============================================================ */
+(function(){
+  const cv=document.getElementById('c-psl'); if(!cv) return;
+  let mode='even';
+  function angles(n){
+    const a=[];
+    if(mode==='even'){ for(let i=0;i<n;i++) a.push(i/n*Math.PI); }
+    else if(mode==='pref'){
+      for(let i=0;i<n;i++){
+        const g=(i%10<8) ? (Math.random()*0.5-0.25) : (Math.random()*Math.PI);
+        a.push(((g%Math.PI)+Math.PI)%Math.PI);
+      }
+    } else {
+      for(let i=0;i<n;i++){
+        const t=(-60+120*(n===1?0.5:i/(n-1)))*Math.PI/180;
+        a.push(((t%Math.PI)+Math.PI)%Math.PI);
+      }
+    }
+    return a;
+  }
+  let cache={n:-1,mode:'',a:[]};
+  function draw(){
+    const n=parseInt(document.getElementById('ps-n').value);
+    if(cache.n!==n||cache.mode!==mode) cache={n,mode,a:angles(n)};
+    const A=cache.a;
+    const s=setup(cv); if(!s) return;
+    const {ctx,w,h}=s;
+    const cx=w/2, cy=h/2, R=Math.min(w,h)/2-14;
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,7); ctx.strokeStyle=C.rule; ctx.lineWidth=1; ctx.stroke();
+    ctx.save(); ctx.globalCompositeOperation='lighter';
+    A.forEach(a=>{
+      ctx.beginPath();
+      ctx.moveTo(cx-Math.cos(a)*R, cy-Math.sin(a)*R);
+      ctx.lineTo(cx+Math.cos(a)*R, cy+Math.sin(a)*R);
+      ctx.strokeStyle='rgba(63,208,222,.34)'; ctx.lineWidth=1.6; ctx.stroke();
+    });
+    ctx.restore();
+    ctx.beginPath(); ctx.arc(cx,cy,3,0,7); ctx.fillStyle=C.amber; ctx.fill();
+    label(ctx,'origin',cx+7,cy-6,C.amber,'left',MONO9);
+    label(ctx,'each line = one central slice',10,h-8,C.faint,'left',MONO9);
+
+    /* angular histogram */
+    const s2=setup(document.getElementById('c-psl2'));
+    const NB=60, hist=new Array(NB).fill(0);
+    A.forEach(a=>hist[Math.min(NB-1,Math.floor(a/Math.PI*NB))]++);
+    const covered=hist.filter(v=>v>0).length;
+    if(s2){
+      const {ctx:c2,w:w2,h:h2}=s2;
+      const pad=24, bw=(w2-2*pad)/NB, mx=Math.max(1,...hist);
+      gridline(c2,pad,h2-pad,w2-pad,h2-pad,C.rule);
+      for(let i=0;i<NB;i++){
+        const bh=hist[i]/mx*(h2-2*pad-10);
+        c2.fillStyle = hist[i]>0 ? C.cyan : C.rose;
+        c2.fillRect(pad+i*bw, h2-pad-Math.max(bh,hist[i]>0?2:2), bw*0.85, Math.max(bh, 2));
+      }
+      label(c2,'0°',pad,h2-pad+13,C.faint,'left');
+      label(c2,'180°',w2-pad,h2-pad+13,C.faint,'right');
+      label(c2,'red = unsampled direction',pad,16,C.rose,'left',MONO9);
+    }
+    /* largest angular gap — the physically meaningful measure of coverage */
+    const sorted=[...A].sort((p,q)=>p-q);
+    let maxGap=0;
+    for(let i=0;i<sorted.length;i++){
+      const nxt = (i===sorted.length-1) ? sorted[0]+Math.PI : sorted[i+1];
+      maxGap=Math.max(maxGap, nxt-sorted[i]);
+    }
+    const gapDeg=maxGap*180/Math.PI;
+    const ideal=180/n;
+    document.getElementById('ps-out').innerHTML =
+      '<b>'+n+'</b> projections · largest unsampled angular gap <b>'+gapDeg.toFixed(1)+'°</b> '
+      + '(perfectly even spacing would give '+ideal.toFixed(1)+'°).'
+      + (mode==='even' ? ' Fourier space fills isotropically, so resolution is the same in every direction. Adding more projections shrinks the gap smoothly.'
+        : mode==='pref' ? ' Preferred orientation: most particles land in a narrow angular range, so the gap stays stubbornly wide however many particles you add. Those directions of Fourier space are simply never measured, and resolution becomes direction-dependent.'
+        : ' Tilt series: the gap sits at roughly 60° no matter how many tilts you collect, because it is set by the ±60° <i>range</i>, not the increment. That fixed gap is the missing wedge.');
+  }
+  bindRange('ps-n', v=>v.toFixed(0), draw);
+  document.querySelectorAll('[data-ps]').forEach(b=>b.addEventListener('click',()=>{
+    document.querySelectorAll('[data-ps]').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on'); mode=b.dataset.ps; cache.n=-1; draw();
+  }));
+  window.addEventListener('resize', draw);
+})();
+
+/* ============================================================
+   11.1  Missing wedge
+   ============================================================ */
+(function(){
+  const cv=document.getElementById('c-mw1'); if(!cv) return;
+  function draw(){
+    const rng=parseFloat(document.getElementById('mw-range').value);
+    const stp=parseFloat(document.getElementById('mw-step').value);
+    const s=setup(cv); if(!s) return;
+    const {ctx,w,h}=s;
+    const cx=w/2, cy=h/2, R=Math.min(w,h)/2-16;
+    const th=rng*Math.PI/180;
+
+    /* missing wedge (vertical, i.e. along Z) */
+    ctx.save(); ctx.fillStyle='rgba(242,85,126,.17)';
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R, -Math.PI/2-(Math.PI/2-th), -Math.PI/2+(Math.PI/2-th));
+    ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,R, Math.PI/2-(Math.PI/2-th), Math.PI/2+(Math.PI/2-th));
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,7); ctx.strokeStyle=C.rule; ctx.stroke();
+    /* sampled slices */
+    const ntilt = Math.floor(2*rng/stp)+1;
+    for(let i=0;i<ntilt;i++){
+      const a=(-rng+i*stp)*Math.PI/180;
+      ctx.beginPath();
+      ctx.moveTo(cx-Math.cos(a)*R, cy-Math.sin(a)*R);
+      ctx.lineTo(cx+Math.cos(a)*R, cy+Math.sin(a)*R);
+      ctx.strokeStyle='rgba(63,208,222,.42)'; ctx.lineWidth=1.3; ctx.stroke();
+    }
+    label(ctx,'missing wedge',cx,cy-R+16,C.rose,'center',MONO9);
+    label(ctx,'kx →',w-14,cy+13,C.faint,'right',MONO9);
+    label(ctx,'kz ↑',cx+7,16,C.faint,'left',MONO9);
+
+    /* elongation: Radermacher factor */
+    const tr=th;
+    const sc=Math.sin(tr)*Math.cos(tr);
+    const elong=Math.sqrt((tr+sc)/Math.max(tr-sc,1e-6));
+    const s2=setup(document.getElementById('c-mw2'));
+    if(s2){
+      const {ctx:c2,w:w2,h:h2}=s2;
+      const r0=Math.min(w2,h2)/5;
+      c2.save(); c2.translate(w2/2,h2/2);
+      c2.beginPath(); c2.arc(0,0,r0,0,7);
+      c2.strokeStyle=C.rule; c2.setLineDash([3,3]); c2.lineWidth=1; c2.stroke(); c2.setLineDash([]);
+      const g=c2.createRadialGradient(0,0,0,0,0,r0);
+      g.addColorStop(0,'rgba(63,208,222,.85)'); g.addColorStop(.7,'rgba(63,208,222,.35)'); g.addColorStop(1,'rgba(63,208,222,0)');
+      c2.save(); c2.scale(1,elong);
+      c2.beginPath(); c2.arc(0,0,r0,0,7); c2.fillStyle=g; c2.fill();
+      c2.restore(); c2.restore();
+      label(c2,'true sphere (dashed)',10,16,C.faint,'left',MONO9);
+      label(c2,'reconstructed: ×'+elong.toFixed(2)+' elongated in Z',10,h2-8,C.cyan,'left',MONO9);
+    }
+    document.getElementById('mw-range-o').textContent=rng.toFixed(0)+'°';
+    document.getElementById('mw-step-o').textContent=stp.toFixed(1)+'°';
+    const frac=2*rng/180*100;
+    document.getElementById('mw-out').innerHTML =
+      '<b>'+ntilt+'</b> tilts over ±'+rng.toFixed(0)+'° → <b>'+frac.toFixed(0)+'%</b> of Fourier space sampled, '
+      + '<b>'+(100-frac).toFixed(0)+'%</b> missing. Z-elongation factor ≈ <b>'+elong.toFixed(2)+'×</b>.<br>'
+      + 'The <i>range</i> sets how big the wedge is; the <i>increment</i> sets how finely you sample inside it. '
+      + 'A finer increment cannot fix a narrow range — you would just be sampling the same two-thirds more densely.';
+  }
+  ['mw-range','mw-step'].forEach(id=>document.getElementById(id).addEventListener('input',draw));
+  draw();
+  window.addEventListener('resize', draw);
+})();
+
+/* ============================================================
+   12.1  Cross-correlation
+   ============================================================ */
+(function(){
+  const cvA=document.getElementById('c-cc-a'); if(!cvA) return;
+  const N=64;
+  const ref=new Float64Array(N*N);
+  (function(){
+    for(let k=0;k<5;k++){
+      const a=k/5*2*Math.PI;
+      const bx=N/2+Math.cos(a)*12, by=N/2+Math.sin(a)*12;
+      for(let y=0;y<N;y++)for(let x=0;x<N;x++)
+        ref[y*N+x]+=Math.exp(-((x-bx)**2+(y-by)**2)/(2*9));
+    }
+  })();
+  function gauss(){ let u=0,v=0; while(u===0)u=Math.random(); while(v===0)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+  function draw(){
+    const dx=parseInt(document.getElementById('cc-dx').value);
+    const dy=parseInt(document.getElementById('cc-dy').value);
+    const nz=parseFloat(document.getElementById('cc-noise').value)/100;
+    const mov=new Float64Array(N*N);
+    for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+      const sx=((x-dx)%N+N)%N, sy=((y-dy)%N+N)%N;
+      mov[y*N+x]=ref[sy*N+sx]+nz*gauss();
+    }
+    const ar=Float64Array.from(ref), ai=new Float64Array(N*N);
+    const br=Float64Array.from(mov), bi=new Float64Array(N*N);
+    fft2(ar,ai,N,false); fft2(br,bi,N,false);
+    const cr=new Float64Array(N*N), ci=new Float64Array(N*N);
+    for(let i=0;i<N*N;i++){
+      cr[i]=br[i]*ar[i]+bi[i]*ai[i];
+      ci[i]=bi[i]*ar[i]-br[i]*ai[i];
+    }
+    fft2(cr,ci,N,true);
+    /* fftshift for display + peak find */
+    const shown=new Float64Array(N*N);
+    let best=-Infinity,bx=0,by=0;
+    for(let y=0;y<N;y++)for(let x=0;x<N;x++){
+      const sx=(x+N/2)%N, sy=(y+N/2)%N;
+      const v=cr[sy*N+sx];
+      shown[y*N+x]=v;
+      if(v>best){best=v;bx=x-N/2;by=y-N/2;}
+    }
+    drawField(cvA, ref, N);
+    drawField(document.getElementById('c-cc-b'), mov, N, {smooth:false});
+    const cvC=document.getElementById('c-cc-c');
+    drawField(cvC, shown, N);
+    /* mark the peak */
+    const s=cvC.getContext('2d');
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    const wC=cvC.clientWidth, hC=parseInt(cvC.getAttribute('height'));
+    const side=Math.min(wC,hC), ox=(wC-side)/2, oy=(hC-side)/2;
+    s.save(); s.setTransform(dpr,0,0,dpr,0,0);
+    s.strokeStyle=C.amber; s.lineWidth=1.5;
+    s.beginPath(); s.arc(ox+(bx+N/2+0.5)/N*side, oy+(by+N/2+0.5)/N*side, 7,0,7); s.stroke();
+    s.restore();
+
+    document.getElementById('cc-dx-o').textContent=dx;
+    document.getElementById('cc-dy-o').textContent=dy;
+    document.getElementById('cc-noise-o').textContent=nz.toFixed(2);
+    const ok = (bx===dx && by===dy);
+    document.getElementById('cc-out').innerHTML =
+      'True shift (<b>'+dx+', '+dy+'</b>) · recovered from the correlation peak (<b>'+bx+', '+by+'</b>) — '
+      + (ok?'<span style="color:'+C.mint+'">correct</span>.':'<span style="color:'+C.rose+'">wrong: the noise has beaten the signal</span>.')
+      + '<br>Every one of the 4,096 possible shifts was evaluated in three FFTs and one multiply. '
+      + 'Testing them one at a time would have cost about 16 million operations instead.';
+  }
+  ['cc-dx','cc-dy','cc-noise'].forEach(id=>document.getElementById(id).addEventListener('input',draw));
+  draw();
+  window.addEventListener('resize', draw);
+})();
+
+/* ============================================================
+   13.1  FSC
+   ============================================================ */
+(function(){
+  const cv=document.getElementById('c-fsc'); if(!cv) return;
+  const PIX=1.0, KMAX=0.5;
+  function draw(){
+    const logn=parseFloat(document.getElementById('fs-n').value);
+    const n=Math.pow(10,logn);
+    const B=parseFloat(document.getElementById('fs-b').value);
+    const mk=parseFloat(document.getElementById('fs-mask').value)/100;
+
+    const s=setup(cv); if(!s) return;
+    const {ctx,w,h}=s;
+    const padL=40,padR=14,padT=22,padB=34;
+    const pw=w-padL-padR, ph=h-padT-padB;
+    const X=k=>padL+k/KMAX*pw, Y=f=>padT+ph-f*ph;
+
+    gridline(ctx,padL,Y(0),w-padR,Y(0),C.rule);
+    gridline(ctx,padL,padT,padL,padT+ph,C.rule);
+    [[0.5,C.violet,'0.5'],[0.143,C.amber,'0.143']].forEach(([v,col,t])=>{
+      gridline(ctx,padL,Y(v),w-padR,Y(v),col,[4,4]);
+      label(ctx,t,padL-6,Y(v)+3,col,'right');
+    });
+    [20,10,6,4,3,2.5,2].forEach(d=>{
+      const k=1/d; if(k>KMAX)return;
+      gridline(ctx,X(k),padT,X(k),padT+ph,'rgba(155,164,200,.09)');
+      label(ctx,d+'Å',X(k),h-10,C.faint,'center');
+    });
+
+    function fsc(k){
+      const ssnr = n*Math.exp(-B*k*k/2)*1.6e-4;
+      let f = ssnr/(ssnr+1);
+      const floor = mk*mk*0.55*Math.exp(-Math.pow((k-KMAX*0.72)/(KMAX*0.55),2));
+      f = f + floor*(1-f);
+      if(k>KMAX*0.985) f*=Math.max(0,(KMAX-k)/(KMAX*0.015));
+      return Math.max(0,Math.min(1,f));
+    }
+    ctx.beginPath(); ctx.strokeStyle=C.cyan; ctx.lineWidth=2;
+    for(let px=0;px<=pw;px++){
+      const k=px/pw*KMAX, y=Y(fsc(k));
+      px===0?ctx.moveTo(padL+px,y):ctx.lineTo(padL+px,y);
+    }
+    ctx.stroke();
+
+    function cross(th){
+      let last=null;
+      for(let i=0;i<=2000;i++){
+        const k=i/2000*KMAX;
+        if(fsc(k)>=th) last=k;
+      }
+      return last;
+    }
+    const k143=cross(0.143), k5=cross(0.5);
+    [[k143,C.amber],[k5,C.violet]].forEach(([k,col])=>{
+      if(k==null)return;
+      gridline(ctx,X(k),padT,X(k),padT+ph,col);
+      ctx.fillStyle=col; ctx.beginPath(); ctx.arc(X(k),Y(k===k143?0.143:0.5),3.4,0,7); ctx.fill();
+    });
+    label(ctx,'FSC',padL+5,padT+10,C.cyan,'left',MONO9);
+    label(ctx,'1.0',padL-6,padT+8,C.faint,'right');
+    label(ctx,'0',padL-6,Y(0)+3,C.faint,'right');
+
+    document.getElementById('fs-n-o').textContent = n>=1e6?(n/1e6).toFixed(1)+'M':(n/1e3).toFixed(0)+'k';
+    document.getElementById('fs-b-o').textContent = B.toFixed(0)+' Å²';
+    document.getElementById('fs-mask-o').textContent = mk<0.25?'loose':mk<0.6?'moderate':'tight';
+    document.getElementById('fs-out').innerHTML =
+      'FSC = 0.143 at <b>'+(k143?(1/k143).toFixed(2)+' Å':'—')+'</b> · '
+      + 'FSC = 0.5 at <b>'+(k5?(1/k5).toFixed(2)+' Å':'—')+'</b>. '
+      + 'The same map, two conventions, very different numbers — always state which threshold you used.<br>'
+      + (mk>0.35 ? '<span style="color:'+C.amber+'">The tight mask is holding the tail up artificially. That elevated plateau is mask-correlated noise, not signal — run phase randomisation to measure how much of it is real.</span>'
+                 : 'Curve decays cleanly to zero, which is what an honest, well-masked FSC looks like.');
+  }
+  ['fs-n','fs-b','fs-mask'].forEach(id=>document.getElementById(id).addEventListener('input',draw));
+  draw();
+  window.addEventListener('resize', draw);
+})();
+
+/* ============================================================
+   14.1  Sharpening
+   ============================================================ */
+(function(){
+  const cv=document.getElementById('c-sharp'); if(!cv) return;
+  const N=512, PIX=0.5;   /* Å per sample along the profile */
+  const truth=new Float64Array(N);
+  const atoms=[58,65,72,150,157,164,171,250,257,340,347,354,361,440,447];
+  atoms.forEach(a=>{ for(let i=0;i<N;i++) truth[i]+=Math.exp(-((i-a)**2)/(2*1.7*1.7)); });
+  function gauss(){ let u=0,v=0; while(u===0)u=Math.random(); while(v===0)v=Math.random();
+    return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v); }
+  const noiseSeed=new Float64Array(N);
+  for(let i=0;i<N;i++) noiseSeed[i]=gauss();
+
+  function build(Bsharp, res){
+    const re=Float64Array.from(truth), im=new Float64Array(N);
+    fft(re,im,false);
+    const nr=Float64Array.from(noiseSeed), ni=new Float64Array(N);
+    fft(nr,ni,false);
+    const B0=135;                       /* intrinsic amplitude decay, Å² */
+    const BN=90;                        /* noise roll-off (detector DQE), Å² */
+    const NAMP=0.012;                   /* white-noise amplitude */
+    const kc=1/res, k1=0.65*kc;         /* cosine-edge low-pass band */
+    for(let i=0;i<N;i++){
+      const f = i<N/2 ? i : N-i;
+      const k = f/(N*PIX);              /* Å⁻¹ */
+      const envelope = Math.exp(-B0*k*k/4);
+      /* Raised-cosine low-pass reaching EXACTLY zero at k = 1/res.
+         A rational falloff (1/(1+(k·res)^p)) cannot be used here: it decays
+         polynomially while `sharp` grows exponentially, so beyond the cutoff
+         the product diverges (≈1e9 at Nyquist for B=-140) and floods the
+         profile with amplified noise. A reconstruction has no data past its
+         resolution limit, so hard zero is also the physically honest choice. */
+      const cutoff = k<=k1 ? 1 : (k>=kc ? 0 : 0.5*(1+Math.cos(Math.PI*(k-k1)/(kc-k1))));
+      const sharp = Math.exp(-Bsharp*k*k/4);
+      const g = envelope*cutoff*sharp;
+      re[i]*=g; im[i]*=g;
+      /* Noise rolls off more slowly than signal (BN < B0), so `sharp`
+         amplifies it faster than it recovers signal — that asymmetry is
+         what makes over-sharpening degrade the map. */
+      const ng = cutoff*sharp*Math.exp(-BN*k*k/4)*NAMP;
+      re[i]+=nr[i]*ng; im[i]+=ni[i]*ng;
+    }
+    fft(re,im,true);
+    return re;
+  }
+  function draw(){
+    const B=parseFloat(document.getElementById('sp-b').value);
+    const res=parseFloat(document.getElementById('sp-res').value);
+    const before=build(0,res), after=build(B,res);
+    const s=setup(cv); if(!s) return;
+    const {ctx,w,h}=s;
+    const pad=32, pw=w-pad-14, ph=(h-56)/2;
+    function plot(arr,y0,col,name){
+      let lo=Infinity,hi=-Infinity;
+      for(let i=0;i<N;i++){ if(arr[i]<lo)lo=arr[i]; if(arr[i]>hi)hi=arr[i]; }
+      const sp=Math.max(hi-lo,1e-9);
+      ctx.beginPath(); ctx.strokeStyle=col; ctx.lineWidth=1.6;
+      for(let i=0;i<N;i++){
+        const px=pad+i/(N-1)*pw, py=y0+ph-(arr[i]-lo)/sp*ph;
+        i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+      }
+      ctx.stroke();
+      label(ctx,name,pad,y0+11,col,'left',MONO9);
+      atoms.forEach(a=>{
+        const px=pad+a/(N-1)*pw;
+        gridline(ctx,px,y0+ph+2,px,y0+ph+7,'rgba(155,164,200,.35)');
+      });
+    }
+    plot(before,10,C.faint,'unsharpened map');
+    plot(after,10+ph+26,B<0?C.cyan:C.faint,'sharpened, B = '+B.toFixed(0)+' Å²');
+    label(ctx,'ticks below = true atom positions',pad,h-6,C.faint,'left',MONO9);
+
+    document.getElementById('sp-b-o').textContent=B.toFixed(0)+' Å²';
+    document.getElementById('sp-res-o').textContent=res.toFixed(1)+' Å';
+    document.getElementById('sp-out').innerHTML =
+      (B>-25 ? 'No sharpening. Features are present but the amplitude decay makes them mushy — this map is better than it looks.'
+       : B>-160 ? 'Well sharpened. Peaks now line up with the true atom positions and the map is interpretable. Note that <b>no new information was added</b> — the phases are untouched, only amplitudes rescaled.'
+       : '<span style="color:'+C.rose+'">Over-sharpened.</span> High-frequency noise is now amplified as hard as the signal, producing sharp peaks that do <b>not</b> correspond to real atoms. This is exactly how over-sharpened maps mislead model building.')
+      + '<br>The resolution cutoff is at '+res.toFixed(1)+' Å — sharpening cannot push a single feature past it.';
+  }
+  ['sp-b','sp-res'].forEach(id=>document.getElementById(id).addEventListener('input',draw));
+  draw();
+  window.addEventListener('resize', draw);
+})();
+
+/* ============================================================
+   MCQ, numeric problems, scrollspy
+   ============================================================ */
+document.querySelectorAll('.mcq').forEach(box=>{
+  const correct=parseInt(box.dataset.correct);
+  const opts=[...box.querySelectorAll('.mcq-opt')];
+  const fb=box.querySelector('.mcq-fb');
+  opts.forEach((o,i)=>o.addEventListener('click',()=>{
+    opts.forEach((x,j)=>{ x.disabled=true; if(j===correct) x.classList.add('right'); });
+    if(i!==correct) o.classList.add('wrong');
+    fb.classList.add('show');
+  }));
+});
+
+document.querySelectorAll('.prob-in input[type=text]').forEach(inp=>{
+  const v=document.getElementById(inp.id+'-v');
+  const ans=parseFloat(inp.dataset.ans), tol=parseFloat(inp.dataset.tol);
+  function check(){
+    const raw=inp.value.replace(/,/g,'').replace(/[^0-9.eE+-]/g,'');
+    const val=parseFloat(raw);
+    if(!inp.value.trim()){ v.textContent=''; v.className='prob-verdict'; return; }
+    if(isNaN(val)){ v.textContent='?'; v.className='prob-verdict'; return; }
+    if(Math.abs(val-ans)<=tol){ v.textContent='✓ correct'; v.className='prob-verdict ok'; }
+    else { v.textContent='not yet'; v.className='prob-verdict no'; }
+  }
+  inp.addEventListener('input',check);
+});
+
+(function(){
+  const links=[...document.querySelectorAll('.rail a')];
+  const secs=links.map(a=>document.querySelector(a.getAttribute('href'))).filter(Boolean);
+  function spy(){
+    let cur=0;
+    secs.forEach((s,i)=>{ if(s.getBoundingClientRect().top < window.innerHeight*0.35) cur=i; });
+    links.forEach((a,i)=>a.classList.toggle('on', i===cur));
+  }
+  window.addEventListener('scroll',spy,{passive:true});
+  spy();
+})();
+</script>
+</body>
+</html>
